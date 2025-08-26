@@ -7,7 +7,7 @@ use Illuminate\Routing\Controller;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use App\Models\Organisation;
+use Iquesters\Organisation\Models\Organisation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -22,18 +22,11 @@ class OrganisationController extends Controller
             $user = User::find(Auth::id());
 
             Log::info('User is super-admin, fetching all organisations');
-            $organisations = Organisation::where('status', '<>', 'deleted')
-                ->with(['metas', 'users'])
-                ->get();
+            $organisations = Organisation::where('status', '<>', 'deleted')->get();
 
             Log::debug('Organisations fetched successfully', ['count' => $organisations->count()]);
 
-            if ($organisations->count() === 1) {
-                $organisation = $organisations->first();
-                return redirect()->route('organisations.show', $organisation->uid);
-            } else {
-                return view('organisations.index', compact('organisations'));
-            }
+            return view('organisation::organisations.index', compact('organisations'));
         } catch (\Exception $e) {
             Log::error('Failed to fetch organisations', ['error' => $e->getMessage()]);
             Log::debug($e->getTraceAsString());
@@ -46,7 +39,7 @@ class OrganisationController extends Controller
     // Show create form
     public function create()
     {
-        return view('organisations.form');
+        return view('organisation::organisations.form');
     }
 
     // Store a new organisation
@@ -91,19 +84,16 @@ class OrganisationController extends Controller
         try {
             Log::info('Fetching organisation', ['organisation_uid' => $organisationUid]);
 
-            $organisation = Organisation::with(['metas', 'users.user'])
-                ->where('uid', $organisationUid)
-                ->firstOrFail();
-
-            if (!isset($organisation)) {
-                throw new \Exception('Organisation not found uid: ' . $organisationUid);
-            }
+            $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
 
             Log::debug('Organisation fetched successfully', ['organisation' => $organisation->toArray()]);
 
-            return view('organisations.show', compact('organisation'));
+            return view('organisation::organisations.show', compact('organisation'));
         } catch (\Exception $e) {
-            Log::error('Failed to fetch organisation', ['organisation_uid' => $organisationUid, 'error' => $e->getMessage()]);
+            Log::error('Failed to fetch organisation', [
+                'organisation_uid' => $organisationUid,
+                'error' => $e->getMessage()
+            ]);
             return redirect()->route('organisations.index')->with('error', 'Organisation not found');
         }
     }
@@ -116,10 +106,10 @@ class OrganisationController extends Controller
             if (!isset($organisation)) {
                 throw new \Exception('Organisation not found uid: ' . $organisationUid);
             }
-            return view('organisations.form', compact('organisation'));
+            return view('organisation::organisations.form', compact('organisation'));
         } catch (\Exception $e) {
             Log::error('Failed to load edit form', ['organisation_uid' => $organisationUid, 'error' => $e->getMessage()]);
-            return redirect()->route('organisations.index')->with('error', 'Organisation not found');
+            return redirect()->route('organisations.index')->with('error', $e->getMessage());
         }
     }
 
