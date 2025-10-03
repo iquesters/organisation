@@ -9,7 +9,8 @@
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "Iquesters\\Organisation\\": "src/"
+      "Iquesters\\Organisation\\": "src/",
+      "Iquesters\\Organisation\\Database\\Seeders\\": "database/seeders/"
     }
   },
   "authors": [

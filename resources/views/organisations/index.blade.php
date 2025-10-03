@@ -1,4 +1,4 @@
-@extends(config('organisation.layout'))
+@extends('usermanagement::layouts.app')
 
 @section('content')
 <div class="">
