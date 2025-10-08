@@ -1,9 +1,12 @@
 @php
+    $layout = class_exists(\Iquesters\UserInterface\UserInterfaceServiceProvider::class)
+        ? 'userinterface::layouts.app'
+        : config('organisation.layout');
     $isEdit = isset($organisation);
     $actionUrl = $isEdit ? route('organisations.update', $organisation->uid) : route('organisations.store');
 @endphp
 
-@extends(config('organisation.layout'))
+@extends($layout)
 
 @section('content')
 <div class="">
