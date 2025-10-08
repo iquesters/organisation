@@ -18,4 +18,11 @@ class OrganisationSeeder extends BaseModuleSeeder
             ]
         ]
     ];
+
+    protected array $permissions = [
+        'view-organisations',
+        'create-organisations',
+        'edit-organisations',
+        'delete-organisations'
+    ];
 }
