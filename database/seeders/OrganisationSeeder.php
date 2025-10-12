@@ -2,9 +2,9 @@
 
 namespace Iquesters\Organisation\Database\Seeders;
 
-use Iquesters\Foundation\Database\Seeders\BaseModuleSeeder;
+use Iquesters\Foundation\Database\Seeders\BaseSeeder;
 
-class OrganisationSeeder extends BaseModuleSeeder
+class OrganisationSeeder extends BaseSeeder
 {
     protected string $moduleName = 'organisation';
     protected string $description = 'organisation module';
@@ -25,4 +25,13 @@ class OrganisationSeeder extends BaseModuleSeeder
         'edit-organisations',
         'delete-organisations'
     ];
+    
+    /**
+     * Implement abstract method from BaseSeeder
+     */
+    protected function seedCustom(): void
+    {
+        // Add custom seeding logic here if needed
+        // Leave empty if none
+    }
 }
