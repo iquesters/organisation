@@ -5,6 +5,7 @@ namespace Iquesters\Organisation\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Organisation extends Model
 {
@@ -25,11 +26,15 @@ class Organisation extends Model
         'uid' => 'string',
     ];
 
-        public function metas(): HasMany
+    public function metas(): HasMany
     {
         return $this->hasMany(OrganisationMeta::class, 'ref_parent');
     }
 
+    public function models(string $modelClass): MorphToMany
+    {
+        return $this->morphedByMany($modelClass, 'model', 'model_has_organisations');
+    }
 
     public function getMetaValue(string $key)
     {
@@ -44,5 +49,4 @@ class Organisation extends Model
             ['meta_value' => $value]
         );
     }
-
 }

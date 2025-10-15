@@ -22,6 +22,17 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('model_has_organisations', function (Blueprint $table) {
+            $table->unsignedBigInteger('organisation_id');
+            $table->string('model_type');
+            $table->unsignedBigInteger('model_id');
+
+            $table->index(['model_id', 'model_type']);
+            $table->foreign('organisation_id')->references('id')->on('organisations')->onDelete('cascade');
+
+            $table->primary(['organisation_id', 'model_id', 'model_type']);
+        });
+
         Schema::create('organisation_metas', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('ref_parent')->unsigned()->nullable();
@@ -41,6 +52,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('organisation_metas');
+        Schema::dropIfExists('model_has_organisations');
         Schema::dropIfExists('organisations');
     }
 };
