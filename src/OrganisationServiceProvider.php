@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Console\Command;
 use Iquesters\Foundation\Support\ConfProvider;
 use Iquesters\Foundation\Enums\Module;
+use Iquesters\Organisation\Config\OrganisationConf;
 use Iquesters\Organisation\Database\Seeders\OrganisationSeeder;
 
 class OrganisationServiceProvider extends ServiceProvider
