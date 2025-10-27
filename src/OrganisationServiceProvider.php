@@ -4,13 +4,16 @@ namespace Iquesters\Organisation;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Console\Command;
+use Iquesters\Foundation\Support\ConfProvider;
+use Iquesters\Foundation\Enums\Module;
 use Iquesters\Organisation\Database\Seeders\OrganisationSeeder;
 
 class OrganisationServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/organisation.php', 'organisation');
+        // $this->mergeConfigFrom(__DIR__ . '/../config/organisation.php', 'organisation');
+        ConfProvider::register(Module::ORGANISATION, OrganisationConf::class);
 
         $this->registerSeedCommand();
     }
