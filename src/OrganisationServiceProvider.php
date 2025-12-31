@@ -1,10 +1,14 @@
 <?php
 
-namespace Iquesters\Organisation\Providers;
+// =============================================================================
+// FILE 4: OrganisationServiceProvider.php (EMPTY!)
+// =============================================================================
+
+namespace Iquesters\Organisation;
 
 use Iquesters\Foundation\System\Providers\BaseServiceProvider;
 
 class OrganisationServiceProvider extends BaseServiceProvider
 {
-    // Everything auto-detected and handled by BaseServiceProvider!
+    // Everything auto-detected and auto-loaded!
 }
