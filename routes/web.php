@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use Iquesters\Organisation\Http\Controllers\OrganisationController;
+use Iquesters\Organisation\Http\Controllers\OrganisationTeamController;
+use Iquesters\Organisation\Http\Controllers\OrganisationUserController;
 
 Route::middleware('web')->group(function () {
     Route::middleware(['auth'])->group(function () {
@@ -13,6 +15,17 @@ Route::middleware('web')->group(function () {
             Route::get('{organisationUid}/edit', [OrganisationController::class, 'edit'])->name('edit');
             Route::put('{organisationUid}', [OrganisationController::class, 'update'])->name('update');
             Route::delete('{organisationUid}', [OrganisationController::class, 'destroy'])->name('destroy');
+            
+            Route::prefix('{organisationUid}/users')->name('users.')->group(function () {
+                Route::get('/', [OrganisationUserController::class, 'usersIndex'])->name('index');
+                Route::post('/', [OrganisationUserController::class, 'addUser'])->name('addUser');
+                Route::delete('/{userUid}', [OrganisationUserController::class, 'removeUser'])->name('removeUser');
+            });
+            
+            Route::prefix('{organisationUid}/teams')->name('teams.')->group(function () {
+                Route::get('/', [OrganisationTeamController::class, 'teamsIndex'])->name('index');
+                
+            });
         });
     });
 });

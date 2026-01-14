@@ -6,6 +6,41 @@
 
 @extends($layout)
 
+@php
+    $tabs = [
+        [
+            'route' => 'organisations.show',
+            'params' => [
+                'organisationUid' => $organisation->uid,
+            ],
+            'icon' => 'far fa-fw fa-list-alt',
+            'label' => 'Overview',
+            // 'permission' => 'view-organisations',
+        ],
+        [
+            'route' => 'organisations.users.index',
+            'params' => [
+                'organisationUid' => $organisation->uid,
+            ],
+            'icon' => 'fas fa-fw fa-users',
+            'label' => 'Users',
+            // 'permission' => 'view-organisations-users',
+        ],
+        [
+            'route' => 'organisations.teams.index',
+            'params' => [
+                'organisationUid' => $organisation->uid,
+            ],
+            'icon' => 'fas fa-fw fa-users-cog',
+            'label' => 'Teams',
+            // 'permission' => 'view-teams'
+        ]
+    ];
+@endphp
+
+@section('page-title', \Iquesters\Foundation\Helpers\MetaHelper::make([($organisation->name ?? 'Organisation'), 'Organisation']))
+@section('meta-description', \Iquesters\Foundation\Helpers\MetaHelper::description('Show page of Organisation'))
+
 @section('content')
 <div class="">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -22,8 +57,8 @@
     </div>
     <div class="row">
         <div class="col-md-9 d-flex flex-column align-items-start justify-content-center text-muted">
-            <p><strong>Name:</strong> {{ $organisation->name }}</p>
-            <p><strong>Description:</strong> {{ $organisation->description ?? 'N/A' }}</p>
+            <p class="mb-0"><strong>Name:</strong> {{ $organisation->name }}</p>
+            <p class="mb-0"><strong>Description:</strong> {{ $organisation->description ?? 'N/A' }}</p>
         </div>
     </div>
 </div>
