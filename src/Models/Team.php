@@ -6,13 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Iquesters\Organisation\Traits\HasTeams;
+use App\Models\User;
 
-class Organisation extends Model
+class Team extends Model
 {
-    use HasFactory, HasTeams;
+    use HasFactory;
 
-    protected $table = 'organisations';
+    protected $table = 'teams';
 
     protected $fillable = [
         'uid',
@@ -29,12 +29,31 @@ class Organisation extends Model
 
     public function metas(): HasMany
     {
-        return $this->hasMany(OrganisationMeta::class, 'ref_parent');
+        return $this->hasMany(TeamMeta::class, 'ref_parent');
     }
 
-    public function models(string $modelClass): MorphToMany
+    // public function models(string $modelClass): MorphToMany
+    // {
+    //     return $this->morphedByMany($modelClass, 'model', 'model_has_teams');
+    // }
+
+    public function organisations(): MorphToMany
     {
-        return $this->morphedByMany($modelClass, 'model', 'model_has_organisations');
+        return $this->morphedByMany(
+            Organisation::class,
+            'model',
+            'model_has_teams'
+        );
+    }
+
+    // Teams ↔ Users
+    public function users(): MorphToMany
+    {
+        return $this->morphedByMany(
+            User::class,
+            'model',
+            'model_has_teams'
+        );
     }
 
     public function getMetaValue(string $key)
