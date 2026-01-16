@@ -7,6 +7,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use App\Models\User;
 use Iquesters\Organisation\Models\Organisation;
 use Iquesters\Organisation\Models\Team;
 
@@ -273,5 +274,121 @@ class OrganisationTeamController extends Controller
             return redirect()->back()->with('error', 'Team not found.');
         }
     }
+    
+    public function teamUsersIndex(string $organisationUid, string $teamUid)
+{
+    try {
+        Log::info('Fetching team users', compact('organisationUid', 'teamUid'));
+
+        $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
+        $team = Team::where('uid', $teamUid)->firstOrFail();
+
+        if (! $organisation->hasTeam($team)) {
+            return back()->with('error', 'Team does not belong to this organisation.');
+        }
+
+        // Users already in team
+        $users = User::whereHas('teams', function ($q) use ($team) {
+            $q->where('teams.id', $team->id);
+        })->get();
+
+        // Users in organisation but NOT in team
+        $availableUsers = User::whereHas('organisations', function ($q) use ($organisation) {
+            $q->where('organisations.id', $organisation->id);
+        })->whereDoesntHave('teams', function ($q) use ($team) {
+            $q->where('teams.id', $team->id);
+        })->get();
+
+        return view('organisation::teams.users.index', compact(
+            'organisation',
+            'team',
+            'users',
+            'availableUsers'
+        ));
+
+    } catch (\Exception $e) {
+        Log::error('Failed to fetch team users', [
+            'error' => $e->getMessage()
+        ]);
+
+        return back()->with('error', $e->getMessage());
+    }
+}
+
+public function addUser(Request $request, string $organisationUid, string $teamUid)
+{
+    try {
+        $request->validate([
+            'user_id' => ['required', 'exists:users,uid'],
+        ]);
+
+        $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
+        $team = Team::where('uid', $teamUid)->firstOrFail();
+        $user = User::where('uid', $request->user_id)->firstOrFail();
+
+        // Ensure team belongs to organisation
+        if (! $organisation->hasTeam($team)) {
+            return back()->with('error', 'Invalid team.');
+        }
+
+        // Ensure user belongs to organisation
+        if (! $user->hasOrganisation($organisation)) {
+            return back()->with('error', 'User must belong to organisation first.');
+        }
+
+        if ($user->hasTeam($team)) {
+            return back()->with('error', 'User already in this team.');
+        }
+
+        $user->assignTeam($team);
+
+        Log::info('User added to team', [
+            'team_uid' => $teamUid,
+            'user_uid' => $user->uid,
+        ]);
+
+        return back()->with('success', 'User added to team.');
+
+    } catch (\Exception $e) {
+        Log::error('Failed to add user to team', [
+            'error' => $e->getMessage()
+        ]);
+
+        return back()->with('error', 'Failed to add user to team.');
+    }
+}
+
+public function removeUser(string $organisationUid, string $teamUid, string $userUid)
+{
+    try {
+        $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
+        $team = Team::where('uid', $teamUid)->firstOrFail();
+        $user = User::where('uid', $userUid)->firstOrFail();
+
+        if (! $organisation->hasTeam($team)) {
+            return back()->with('error', 'Invalid team.');
+        }
+
+        if (! $user->hasTeam($team)) {
+            return back()->with('error', 'User not in this team.');
+        }
+
+        $user->removeTeam($team);
+
+        Log::info('User removed from team', [
+            'team_uid' => $teamUid,
+            'user_uid' => $userUid,
+        ]);
+
+        return back()->with('success', 'User removed from team.');
+
+    } catch (\Exception $e) {
+        Log::error('Failed to remove user from team', [
+            'error' => $e->getMessage()
+        ]);
+
+        return back()->with('error', 'Failed to remove user from team.');
+    }
+}
 
 }

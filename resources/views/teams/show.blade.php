@@ -2,11 +2,7 @@
     $layout = class_exists(\Iquesters\UserInterface\UserInterfaceServiceProvider::class)
         ? 'userinterface::layouts.app'
         : config('organisation.layout');
-@endphp
 
-@extends($layout)
-
-@php
     $tabs = [
         [
             'route' => 'organisations.teams.show',
@@ -28,6 +24,8 @@
         ]
     ];
 @endphp
+
+@extends($layout)
 
 @section('page-title', \Iquesters\Foundation\Helpers\MetaHelper::make([($team->name ?? 'Team'), 'Team']))
 @section('meta-description', \Iquesters\Foundation\Helpers\MetaHelper::description('Show page of Team'))

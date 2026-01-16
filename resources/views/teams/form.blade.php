@@ -8,7 +8,21 @@
 
 @extends($layout)
 
-@section('page-title', $isEdit ? 'Edit Team' : 'Create Team')
+@section(
+    'page-title',
+    \Iquesters\Foundation\Helpers\MetaHelper::make([
+        $isEdit ? 'Edit Team' : 'Create Team',
+        $organisation->name ?? 'Organisation'
+    ])
+)
+
+@section(
+    'meta-description',
+    \Iquesters\Foundation\Helpers\MetaHelper::description(
+        ($isEdit ? 'Edit team' : 'Create team') .
+        ' in organisation ' . ($organisation->name ?? '') . '.'
+    )
+)
 
 @section('content')
 <div>

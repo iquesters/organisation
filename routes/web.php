@@ -33,7 +33,8 @@ Route::middleware('web')->group(function () {
                 
                 Route::get('{teamUid}/show', [OrganisationTeamController::class, 'show'])->name('show');
                 Route::get('{teamUid}/users', [OrganisationTeamController::class, 'teamUsersIndex'])->name('users.index');
-                
+                Route::post('{teamUid}/users', [OrganisationTeamController::class, 'addUser'])->name('users.addUser');
+                Route::delete('{teamUid}/users/{userUid}', [OrganisationTeamController::class, 'removeUser'])->name('users.removeUser');
             });
         });
     });
