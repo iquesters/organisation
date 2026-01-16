@@ -19,6 +19,7 @@ Route::middleware('web')->group(function () {
             Route::prefix('{organisationUid}/users')->name('users.')->group(function () {
                 Route::get('/', [OrganisationUserController::class, 'usersIndex'])->name('index');
                 Route::post('/', [OrganisationUserController::class, 'addUser'])->name('addUser');
+                Route::get('/create', [OrganisationUserController::class, 'create'])->name('create');
                 Route::delete('/{userUid}', [OrganisationUserController::class, 'removeUser'])->name('removeUser');
             });
             
