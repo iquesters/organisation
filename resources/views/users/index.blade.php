@@ -38,8 +38,8 @@
     ];
 @endphp
 
-@section('page-title', \Iquesters\Foundation\Helpers\MetaHelper::make([($organisation->name ?? 'Organisation'), 'Users']))
-@section('meta-description', \Iquesters\Foundation\Helpers\MetaHelper::description('List of users in the organisation ' . ($organisation->name ?? '') . '. View them, add project, and more.'))
+@section('page-title', \Iquesters\Foundation\Helpers\MetaHelper::make(['Users', ($organisation->name ?? 'Organisation')]))
+@section('meta-description', \Iquesters\Foundation\Helpers\MetaHelper::description('List of users in the organisation ' . ($organisation->name ?? '') . '. View them, add and more.'))
 
 @section('content')
 

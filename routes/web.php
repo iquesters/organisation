@@ -25,6 +25,14 @@ Route::middleware('web')->group(function () {
             
             Route::prefix('{organisationUid}/teams')->name('teams.')->group(function () {
                 Route::get('/', [OrganisationTeamController::class, 'teamsIndex'])->name('index');
+                Route::get('/create', [OrganisationTeamController::class, 'create'])->name('create');
+                Route::post('/', [OrganisationTeamController::class, 'store'])->name('store');
+                Route::get('{teamUid}/edit', [OrganisationTeamController::class, 'edit'])->name('edit');
+                Route::put('{teamUid}', [OrganisationTeamController::class, 'update'])->name('update');
+                Route::delete('/{teamUid}', [OrganisationTeamController::class, 'destroy'])->name('destroy');
+                
+                Route::get('{teamUid}/show', [OrganisationTeamController::class, 'show'])->name('show');
+                Route::get('{teamUid}/users', [OrganisationTeamController::class, 'teamUsersIndex'])->name('users.index');
                 
             });
         });
