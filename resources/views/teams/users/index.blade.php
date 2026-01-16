@@ -77,7 +77,7 @@
                     <td>{{ $user->name }}</td>
                     <td>{{ $user->email }}</td>
                     <td>
-                        {{ \Iquesters\Foundation\Helpers\TimeHelper::displayDateTime($user->created_at) }}
+                        {{ \Iquesters\Foundation\Helpers\DateTimeHelper::displayDateTime($user->created_at) }}
                     </td>
                     <td>
                         <form method="POST"

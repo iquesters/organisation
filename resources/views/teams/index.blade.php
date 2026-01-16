@@ -68,7 +68,7 @@
                     <span class="badge badge-{{ $team->status }}">{{ ucfirst($team->status) }}</span>
                 </td>
                 <td>
-                    {{ \Iquesters\Foundation\Helpers\TimeHelper::displayDateTime($team->created_at) }}
+                    {{ \Iquesters\Foundation\Helpers\DateTimeHelper::displayDateTime($team->created_at) }}
                 </td>
                 <td>
                     <form action="{{ route('organisations.teams.destroy', ['organisationUid' => $organisation->uid, 'teamUid' => $team->uid]) }}" method="POST" class="d-inline">

@@ -77,7 +77,7 @@
                             <span class="badge badge-draft">{{ $org->name }}</span>
                         @endforeach
                     </td>
-                    <td>{{ \Iquesters\Foundation\Helpers\TimeHelper::displayDateTime($user->created_at) }}</td>
+                    <td>{{ \Iquesters\Foundation\Helpers\DateTimeHelper::displayDateTime($user->created_at) }}</td>
                     <td>
                         <form action="{{ route('organisations.users.removeUser', ['organisationUid' => $organisation->uid, 'userUid' => $user->uid]) }}" method="POST" class="d-inline">
                             @csrf
