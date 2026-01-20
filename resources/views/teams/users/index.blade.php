@@ -49,14 +49,14 @@
 {{-- Header --}}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h5 class="fs-6 text-muted">
-        Total – {{ $users->count() }} User(s)
+        Total – {{ $users->count() }} Member(s)
     </h5>
 
     <button class="btn btn-sm btn-outline-primary"
         data-bs-toggle="modal"
         data-bs-target="#addUserModal">
         <i class="fas fa-fw fa-user-plus"></i>
-        <span class="ms-1">Add User</span>
+        <span class="ms-1">Add Member</span>
     </button>
 </div>
 

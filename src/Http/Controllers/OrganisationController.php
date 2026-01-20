@@ -18,23 +18,55 @@ class OrganisationController extends Controller
     public function index()
     {
         try {
-            Log::info('Fetching all organisations');
-            $user = User::find(Auth::id());
+            Log::info('Fetching organisations');
 
-            Log::info('User is super-admin, fetching all organisations');
-            $organisations = Organisation::where('status', '<>', 'deleted')->get();
+            $user = Auth::user();
 
-            Log::debug('Organisations fetched successfully', ['count' => $organisations->count()]);
+            // ✅ Super Admin → see all organisations
+            if ($user->hasRole('super-admin')) {
+                Log::info('User is super-admin, fetching all organisations');
 
+                $organisations = Organisation::where('status', '<>', 'deleted')->get();
+
+                Log::debug('Organisations fetched successfully', [
+                    'count' => $organisations->count()
+                ]);
+
+                return view('organisation::organisations.index', compact('organisations'));
+            }
+
+            // ✅ Non super-admin → only user's organisations
+            $organisations = $user->organisations()
+                ->where('status', '<>', 'deleted')
+                ->get();
+
+            $count = $organisations->count();
+
+            Log::debug('User organisations fetched', ['count' => $count]);
+
+            // ✅ Only ONE organisation → redirect to show
+            if ($count === 1) {
+                return redirect()->route(
+                    'organisations.show',
+                    $organisations->first()->uid
+                );
+            }
+
+            // ✅ More than one → show index
             return view('organisation::organisations.index', compact('organisations'));
+
         } catch (\Exception $e) {
-            Log::error('Failed to fetch organisations', ['error' => $e->getMessage()]);
+            Log::error('Failed to fetch organisations', [
+                'error' => $e->getMessage()
+            ]);
+
             Log::debug($e->getTraceAsString());
-            return redirect()->route('dashboard')->with('error', 'Failed to load organisations');
+
+            return redirect()
+                ->route('dashboard')
+                ->with('error', 'Failed to load organisations');
         }
     }
-
-
 
     // Show create form
     public function create()

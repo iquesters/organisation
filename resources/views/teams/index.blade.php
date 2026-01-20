@@ -50,7 +50,7 @@
             <th>Name</th>
             <th>Description</th>
             <th>Status</th>
-            <th>Created At</th>
+            <th>Member(s)</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -67,8 +67,8 @@
                 <td>
                     <span class="badge badge-{{ $team->status }}">{{ ucfirst($team->status) }}</span>
                 </td>
-                <td>
-                    {{ \Iquesters\Foundation\Helpers\DateTimeHelper::displayDateTime($team->created_at) }}
+                <td class="text-start">
+                    {{ $team->users->count() }}
                 </td>
                 <td>
                     <form action="{{ route('organisations.teams.destroy', ['organisationUid' => $organisation->uid, 'teamUid' => $team->uid]) }}" method="POST" class="d-inline">

@@ -49,10 +49,17 @@
                 'entity' => $organisation
             ])
         </div>
-        <div>
+        <div class="d-flex align-items-center justify-content-center gap-2">
             <a href="{{ route('organisations.edit', $organisation->uid) }}" class="btn btn-sm btn-outline-dark">
                 <i class="fas fa-fw fa-edit"></i><span class="d-none d-md-inline-block ms-2">Edit</span>
             </a>
+            <form action="{{ route('organisations.destroy', $organisation->uid) }}" method="POST" onsubmit="return confirm('Are you sure?')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="fas fa-fw fa-trash"></i><span class="d-none d-md-inline-block ms-2">Delete</span>
+                </button>
+            </form>
         </div>
     </div>
     <div class="row">

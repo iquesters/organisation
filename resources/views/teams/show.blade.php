@@ -20,7 +20,7 @@
                 'teamUid' => $team->uid,
             ],
             'icon' => 'fas fa-fw fa-users',
-            'label' => 'Users',
+            'label' => 'Members',
         ]
     ];
 @endphp

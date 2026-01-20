@@ -50,31 +50,17 @@
                         </td>
                         <td>{{ $organisation->created_at->format('d M Y') }}</td>
                         <td>
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    {{-- <li>
-                                        <a class="dropdown-item text-info" href="{{ route('organisations.show', $organisation->uid) }}">
-                                            <i class="fas fa-fw fa-eye me-1"></i> View
-                                        </a>
-                                    </li> --}}
-                                    <li>
-                                        <a class="dropdown-item" href="{{ route('organisations.edit', $organisation->uid) }}">
-                                            <i class="fas fa-fw fa-edit me-1"></i> Edit
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <form action="{{ route('organisations.destroy', $organisation->uid) }}" method="POST" onsubmit="return confirm('Are you sure?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="dropdown-item text-danger">
-                                                <i class="fas fa-fw fa-trash me-1"></i> Delete
-                                            </button>
-                                        </form>
-                                    </li>
-                                </ul>
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <a class="btn btn-sm btn-outline-dark" href="{{ route('organisations.edit', $organisation->uid) }}">
+                                    <i class="fas fa-fw fa-edit"></i>
+                                </a>
+                                <form action="{{ route('organisations.destroy', $organisation->uid) }}" method="POST" onsubmit="return confirm('Are you sure?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-fw fa-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
