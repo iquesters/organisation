@@ -67,7 +67,7 @@
                 <td>
                     <span class="badge badge-{{ $team->status }}">{{ ucfirst($team->status) }}</span>
                 </td>
-                <td class="text-start">
+                <td>
                     {{ $team->users->count() }}
                 </td>
                 <td>
