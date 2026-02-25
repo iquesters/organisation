@@ -31,14 +31,12 @@
     </div>
 
     @unless($hideStatus)
-        <span class="badge badge-{{ strtolower($entity->status) }}">
-            {{ ucfirst($entity->status) }}
-        </span>
+        <x-userinterface::status :status="$entity->status" />
     @endunless
 
     @foreach ($extraBadges as $badge)
-        <span class="badge badge-{{ $badge['class'] }}">
+        <x-userinterface::status :status="$badge['class']">
             {{ $badge['label'] }}
-        </span>
+        </x-userinterface::status>
     @endforeach
 </div>

@@ -44,9 +44,7 @@
                             <small><small class="text-muted">{{ $organisation->uid }}</small></small>
                         </td>
                         <td>
-                            <span class="badge badge-{{ strtolower($organisation->status) }}">
-                                {{ ucfirst($organisation->status) }}
-                            </span>
+                            <x-userinterface::status :status="$organisation->status" />
                         </td>
                         <td>{{ $organisation->created_at->format('d M Y') }}</td>
                         <td>

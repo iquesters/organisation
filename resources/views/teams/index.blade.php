@@ -65,7 +65,7 @@
                 </td>
                 <td>{{ Str::limit($team->description, 50) }}</td>
                 <td>
-                    <span class="badge badge-{{ $team->status }}">{{ ucfirst($team->status) }}</span>
+                    <x-userinterface::status :status="$team->status" />
                 </td>
                 <td>
                     {{ $team->users->count() }}

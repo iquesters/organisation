@@ -34,7 +34,7 @@
 <div class="mb-2 d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center justify-content-center gap-2">
         <h5 class="fs-6 text-muted">{{ $team->name }}</h5>
-        <span class="badge badge-{{ $team->status }}">{{ ucfirst($team->status) }}</span>
+        <x-userinterface::status :status="$team->status" />
     </div>
     <div>
         <a href="{{ route('organisations.teams.edit', ['organisationUid' => $organisation->uid, 'teamUid' => $team->uid]) }}" class="btn btn-sm btn-outline-dark">

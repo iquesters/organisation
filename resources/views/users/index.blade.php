@@ -74,7 +74,9 @@
                     <td>{{ $user->email }}</td>
                     <td>
                         @foreach ($user->organisations as $org)
-                            <span class="badge badge-draft">{{ $org->name }}</span>
+                            <x-userinterface::status status="draft">
+                                {{ $org->name }}
+                            </x-userinterface::status>
                         @endforeach
                     </td>
                     <td>{{ \Iquesters\Foundation\Helpers\DateTimeHelper::displayDateTime($user->created_at) }}</td>
