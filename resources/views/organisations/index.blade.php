@@ -6,7 +6,22 @@
 
 @extends($layout)
 
+@section('page-title', \Iquesters\Foundation\Helpers\MetaHelper::make(['Organisations']))
+@section('meta-description', \Iquesters\Foundation\Helpers\MetaHelper::description('List of Organisations'))
+
+@php
+    $tabs = [
+        [
+            'route' => 'organisations.index',
+            'params' => [],
+            'icon' => 'fas fa-fw fa-building-columns',
+            'label' => 'All Organisations',
+        ],
+    ];
+@endphp
+
 @section('content')
+
 <div class="">
     <div class="d-flex justify-content-between align-items-center mb-2">
         <h5 class="fs-6 text-muted">Total {{ $organisations->count() }} Organisations</h5>

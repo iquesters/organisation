@@ -34,7 +34,16 @@
             'icon' => 'fas fa-fw fa-users-cog',
             'label' => 'Teams',
             // 'permission' => 'view-teams'
-        ]
+        ],
+        
+        <!-- [
+            'route' => 'organisations.history',
+            'params' => [
+                'organisationUid' => $organisation->uid,
+            ],
+            'icon' => 'fas fa-fw fa-clock-rotate-left',
+            'label' => 'History',
+        ], -->
     ];
 @endphp
 
@@ -43,6 +52,7 @@
 
 @section('content')
 <div class="">
+    @include('userinterface::components.tabs', ['tabs' => $tabs])
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="d-flex align-items-center">
             @include('organisation::components.entity-name-status', [
