@@ -25,6 +25,29 @@ class OrganisationSeeder extends BaseSeeder
         'edit-organisations',
         'delete-organisations'
     ];
+
+    protected array $entities = [
+        'organisations' => [
+            'fields' => [],
+            'meta_fields' => [],
+            'metas' => [],
+        ],
+        'teams' => [
+            'fields' => [],
+            'meta_fields' => [],
+            'metas' => [],
+        ],
+        'model_has_organisations' => [
+            'fields' => [],
+            'meta_fields' => [],
+            'metas' => [],
+        ],
+        'model_has_teams' => [
+            'fields' => [],
+            'meta_fields' => [],
+            'metas' => [],
+        ],
+    ];
     
     /**
      * Implement abstract method from BaseSeeder
