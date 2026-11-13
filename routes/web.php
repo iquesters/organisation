@@ -7,11 +7,16 @@ use Iquesters\Organisation\Http\Controllers\OrganisationUserController;
 
 Route::middleware('web')->group(function () {
     Route::middleware(['auth'])->group(function () {
+        // Members: index lists only the user's own organisations; show checks membership.
         Route::prefix('organisations')->name('organisations.')->group(function () {
             Route::get('/', [OrganisationController::class, 'index'])->name('index');
+            Route::get('{organisationUid}/show', [OrganisationController::class, 'show'])->name('show');
+        });
+
+        // Admin only: create, edit, delete, and user/team management.
+        Route::prefix('organisations')->name('organisations.')->middleware('ensure.admin')->group(function () {
             Route::get('/create', [OrganisationController::class, 'create'])->name('create');
             Route::post('/', [OrganisationController::class, 'store'])->name('store');
-            Route::get('{organisationUid}/show', [OrganisationController::class, 'show'])->name('show');
             Route::get('{organisationUid}/edit', [OrganisationController::class, 'edit'])->name('edit');
             Route::put('{organisationUid}', [OrganisationController::class, 'update'])->name('update');
             Route::delete('{organisationUid}', [OrganisationController::class, 'destroy'])->name('destroy');
