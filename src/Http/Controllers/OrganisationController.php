@@ -96,8 +96,8 @@ class OrganisationController extends Controller
                 'name' => $request->name,
                 'description' => $request->description ?? '',
                 'status' => $request->status ?? 'unknown',
-                'created_by' => Auth::user()->id ?? 0,
-                'updated_by' => Auth::user()->id ?? 0,
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
             ]);
 
             Log::info('Organisation created successfully', ['organisation_uid' => $organisation->uid]);

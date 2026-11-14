@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Renamed from an unprefixed file; existing installs already have this table.
+        if (Schema::hasTable('organisations')) {
+            return;
+        }
+
         Schema::create('organisations', function (Blueprint $table) {
             $table->id();
             $table->ulid('uid')->unique();
@@ -51,8 +56,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('organisation_metas');
-        Schema::dropIfExists('model_has_organisations');
-        Schema::dropIfExists('organisations');
+        // Intentionally empty: this file was renamed from an unprefixed migration.
+        // On existing installs it ran as a no-op, so rolling it back must not drop
+        // live data. Use migrate:fresh to rebuild from scratch.
     }
 };
