@@ -1,7 +1,7 @@
 @php
     $layout = class_exists(\Iquesters\UserInterface\UserInterfaceServiceProvider::class)
         ? 'userinterface::layouts.app'
-        : config('organisation.layout');
+        : \Iquesters\Foundation\Support\ConfProvider::from(\Iquesters\Foundation\Enums\Module::ORGANISATION)->organisation_layout;
 
     $isEdit = isset($team);
 @endphp
