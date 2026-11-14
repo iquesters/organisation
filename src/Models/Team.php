@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use App\Models\User;
+use Iquesters\Foundation\Support\UserModel;
 
 class Team extends Model
 {
@@ -50,7 +50,7 @@ class Team extends Model
     public function users(): MorphToMany
     {
         return $this->morphedByMany(
-            User::class,
+            UserModel::name(),
             'model',
             'model_has_teams'
         );

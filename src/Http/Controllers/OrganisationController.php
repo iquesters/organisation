@@ -4,7 +4,7 @@
 namespace Iquesters\Organisation\Http\Controllers;
 
 use Illuminate\Routing\Controller;
-use App\Models\User;
+use Iquesters\Foundation\Support\UserModel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Iquesters\Organisation\Models\Organisation;

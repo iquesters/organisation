@@ -7,7 +7,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use App\Models\User;
+use Iquesters\Foundation\Support\UserModel;
 use Iquesters\Organisation\Models\Organisation;
 use Iquesters\Organisation\Models\Team;
 
@@ -288,12 +288,12 @@ class OrganisationTeamController extends Controller
         }
 
         // Users already in team
-        $users = User::whereHas('teams', function ($q) use ($team) {
+        $users = UserModel::query()->whereHas('teams', function ($q) use ($team) {
             $q->where('teams.id', $team->id);
         })->get();
 
         // Users in organisation but NOT in team
-        $availableUsers = User::whereHas('organisations', function ($q) use ($organisation) {
+        $availableUsers = UserModel::query()->whereHas('organisations', function ($q) use ($organisation) {
             $q->where('organisations.id', $organisation->id);
         })->whereDoesntHave('teams', function ($q) use ($team) {
             $q->where('teams.id', $team->id);
@@ -324,7 +324,7 @@ public function addUser(Request $request, string $organisationUid, string $teamU
 
         $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
         $team = Team::where('uid', $teamUid)->firstOrFail();
-        $user = User::where('uid', $request->user_id)->firstOrFail();
+        $user = UserModel::query()->where('uid', $request->user_id)->firstOrFail();
 
         // Ensure team belongs to organisation
         if (! $organisation->hasTeam($team)) {
@@ -363,7 +363,7 @@ public function removeUser(string $organisationUid, string $teamUid, string $use
     try {
         $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
         $team = Team::where('uid', $teamUid)->firstOrFail();
-        $user = User::where('uid', $userUid)->firstOrFail();
+        $user = UserModel::query()->where('uid', $userUid)->firstOrFail();
 
         if (! $organisation->hasTeam($team)) {
             return back()->with('error', 'Invalid team.');

@@ -4,7 +4,7 @@
 namespace Iquesters\Organisation\Http\Controllers;
 
 use Illuminate\Routing\Controller;
-use App\Models\User;
+use Iquesters\Foundation\Support\UserModel;
 use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 use Iquesters\Organisation\Models\Organisation;
@@ -23,14 +23,14 @@ class OrganisationUserController extends Controller
             $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
 
             // Users already in this organisation
-            $users = User::whereHas('organisations', function ($query) use ($organisation) {
+            $users = UserModel::query()->whereHas('organisations', function ($query) use ($organisation) {
                     $query->where('organisations.id', $organisation->id);
                 })
                 ->with('organisations')
                 ->get();
 
             // Users NOT in this organisation (available users)
-            $availableUsers = User::whereDoesntHave('organisations', function ($query) use ($organisation) {
+            $availableUsers = UserModel::query()->whereDoesntHave('organisations', function ($query) use ($organisation) {
                     $query->where('organisations.id', $organisation->id);
                 })
                 ->get();
@@ -76,7 +76,7 @@ class OrganisationUserController extends Controller
             $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
 
             // Fetch user by UID
-            $user = User::where('uid', $request->user_id)->firstOrFail();
+            $user = UserModel::query()->where('uid', $request->user_id)->firstOrFail();
 
             // Prevent duplicate assignment
             if ($user->hasOrganisation($organisation)) {
@@ -137,7 +137,7 @@ class OrganisationUserController extends Controller
             $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
 
             // Fetch user by UID
-            $user = User::where('uid', $userUid)->firstOrFail();
+            $user = UserModel::query()->where('uid', $userUid)->firstOrFail();
 
             // Check if the user is actually assigned to this organisation
             if (!$user->hasOrganisation($organisation)) {
