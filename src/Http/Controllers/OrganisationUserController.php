@@ -3,19 +3,21 @@
 
 namespace Iquesters\Organisation\Http\Controllers;
 
+use Iquesters\Foundation\System\Traits\Loggable;
 use Illuminate\Routing\Controller;
 use Iquesters\Foundation\Support\UserModel;
-use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 use Iquesters\Organisation\Models\Organisation;
 use Illuminate\Http\Request;
 
 class OrganisationUserController extends Controller
 {
+    use Loggable;
+
     public function usersIndex(string $organisationUid)
     {
         try {
-            Log::info('Fetching users for organisation', [
+            static::logInfo('Fetching users for organisation', [
                 'organisationUid' => $organisationUid
             ]);
 
@@ -35,7 +37,7 @@ class OrganisationUserController extends Controller
                 })
                 ->get();
 
-            Log::debug('Organisation users fetched', [
+            static::logDebug('Organisation users fetched', [
                 'organisation_id' => $organisation->id,
                 'assigned' => $users->count(),
                 'available' => $availableUsers->count()
@@ -47,7 +49,7 @@ class OrganisationUserController extends Controller
             );
 
         } catch (\Exception $e) {
-            Log::error('Failed to fetch organisation users', [
+            static::logError('Failed to fetch organisation users', [
                 'organisationUid' => $organisationUid,
                 'error' => $e->getMessage()
             ]);
@@ -67,7 +69,7 @@ class OrganisationUserController extends Controller
                 'user_id' => ['required', 'string', 'exists:users,uid'],
             ]);
 
-            Log::debug('Adding user to organisation', [
+            static::logDebug('Adding user to organisation', [
                 'organisationUid' => $organisationUid,
                 'userUid' => $request->user_id,
             ]);
@@ -88,7 +90,7 @@ class OrganisationUserController extends Controller
             // ✅ Correct trait method
             $user->assignOrganisation($organisation);
 
-            Log::info('User assigned to organisation', [
+            static::logInfo('User assigned to organisation', [
                 'organisation_uid' => $organisation->uid,
                 'user_uid' => $user->uid,
             ]);
@@ -98,7 +100,7 @@ class OrganisationUserController extends Controller
                 ->with('success', 'User added to organisation successfully.');
 
         } catch (\Exception $e) {
-            Log::error('Failed to add user to organisation', [
+            static::logError('Failed to add user to organisation', [
                 'organisationUid' => $organisationUid,
                 'error' => $e->getMessage(),
             ]);
@@ -121,7 +123,7 @@ class OrganisationUserController extends Controller
             return view('usermanagement::users.create', compact('organisation', 'roles'));
 
         } catch (\Exception $e) {
-            Log::error('Failed to load organisation user create page', [
+            static::logError('Failed to load organisation user create page', [
                 'organisation_uid' => $organisationUid,
                 'error' => $e->getMessage()
             ]);
@@ -154,7 +156,7 @@ class OrganisationUserController extends Controller
                 ->with('success', 'User removed from organisation successfully.');
 
         } catch (\Exception $e) {
-            Log::error('Failed to remove user from organisation', [
+            static::logError('Failed to remove user from organisation', [
                 'organisationUid' => $organisationUid,
                 'userUid' => $userUid,
                 'error' => $e->getMessage()
