@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follo
 
 ## [Unreleased] – 2.0.0
 
+### Housekeeping
+- Added Pint/Larastan, test CI, `.gitattributes`, `SECURITY.md`, `CONTRIBUTING.md`, `UPGRADE.md` and composer metadata.
+
 ### Breaking
 - Requires PHP 8.3, Laravel 12/13 and spatie/laravel-permission 8.
 - `config/organisation.php` and `ORGANISATION_LAYOUT` removed; views use the DB setting `organisation_layout`.
