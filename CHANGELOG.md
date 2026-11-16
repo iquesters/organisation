@@ -13,8 +13,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follo
 
 ### Added
 - Testbench test suite.
+- On `composer install/update` the app's `User` model gets the `HasOrganisations` trait automatically.
 
 ### Changed
+- Admin check uses foundation's `EnsureAdmin::roles()` (DB setting) instead of a config lookup.
+- Removed the unused `api_conf` setting (module APIs are declared in composer.json now).
+- Docs no longer list organisation/team API endpoints that never existed.
 - Logging uses foundation's `Loggable`.
 - Real dependencies declared; Laravel 13 allowed.
 

@@ -122,7 +122,7 @@ class OrganisationController extends Controller
 
             // Non-admins may only view organisations they belong to.
             $user = Auth::user();
-            $isAdmin = $user->hasAnyRole((array) config('foundation.admin_roles', ['super-admin', 'admin']));
+            $isAdmin = $user->hasAnyRole(\Iquesters\Foundation\Http\Middleware\EnsureAdmin::roles());
             if (! $isAdmin && ! $user->organisations()->whereKey($organisation->id)->exists()) {
                 throw new \Exception('User is not a member of organisation uid: ' . $organisationUid);
             }

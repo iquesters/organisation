@@ -20,22 +20,12 @@ docs/
 
 ## API Endpoints
 
-### Organisation APIs
+The module has no JSON API yet: organisations, teams and members are managed through its web
+pages (`routes/web.php`).
 
-* `GET /api/organisation/list` — List all organisations
-* `GET /api/organisation/show/{uid}` — Get organisation by UID
-* `POST /api/organisation/store` — Create organisation
-* `PUT /api/organisation/update/{uid}` — Update organisation
-* `DELETE /api/organisation/delete/{uid}` — Delete organisation
-
----
-
-### Team APIs
-
-* `GET /api/team/list`
-* `POST /api/team/store`
-* `PUT /api/team/update/{uid}`
-* `DELETE /api/team/delete/{uid}`
+To add one, follow the platform convention (foundation `docs/developer/api.md`): declare it in
+`composer.json` under `extra.platform.api` with prefix `organisation`, put the routes in
+`routes/api.v1.php`, and they are served at `/api/organisation/v1/...`.
 
 ---
 
