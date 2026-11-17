@@ -41,19 +41,7 @@ It’s ideal for applications that need structured control over users, teams, an
 
 ### Layout Configuration
 
-You can control which Blade layout the package’s views should extend.
-By default, the package uses its own built-in layout:
-
-```php
-'layout' => env('ORGANISATION_LAYOUT', 'organisation::layouts.package')
-```
-
-#### Example `.env` Setting:
-
-```env
-ORGANISATION_LAYOUT=layouts.app
-```
-
-This allows you to unify the look and feel of the Organisation module with your existing application’s design.
+The layout is the DB setting `organisation_layout` (not a config file or `.env`).
+See [docs/developer/configuration.md](docs/developer/configuration.md).
 
 ---

@@ -2,8 +2,8 @@
 
 namespace Iquesters\Organisation\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Iquesters\Organisation\Traits\HasTeams;
@@ -40,6 +40,7 @@ class Organisation extends Model
     public function getMetaValue(string $key)
     {
         $meta = $this->metas()->where('meta_key', $key)->first();
+
         return $meta ? $meta->meta_value : null;
     }
 

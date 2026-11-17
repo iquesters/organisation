@@ -66,7 +66,7 @@ trait HasTeams
     public function syncTeams(array $teams): self
     {
         $teamIds = [];
-        
+
         foreach ($teams as $team) {
             if (is_string($team)) {
                 $org = Team::where('uid', $team)->firstOrFail();

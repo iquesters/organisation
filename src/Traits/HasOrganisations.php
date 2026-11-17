@@ -66,7 +66,7 @@ trait HasOrganisations
     public function syncOrganisations(array $organisations): self
     {
         $organisationIds = [];
-        
+
         foreach ($organisations as $organisation) {
             if (is_string($organisation)) {
                 $org = Organisation::where('uid', $organisation)->firstOrFail();

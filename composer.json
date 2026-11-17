@@ -1,17 +1,21 @@
 {
   "name": "iquesters/organisation",
   "description": "The Organisation Package provides a structured way to manage multi-level organizational hierarchies within a Laravel application.",
+  "keywords": [
+    "laravel",
+    "organisation",
+    "teams",
+    "multi-tenant",
+    "iquesters"
+  ],
   "type": "library",
-  "require": {
-    "php": ">=8.1",
-    "laravel/framework": "^10.0|^11.0|^12.0"
-  },
   "license": "MIT",
-  "autoload": {
-    "psr-4": {
-      "Iquesters\\Organisation\\": "src/",
-      "Iquesters\\Organisation\\Database\\Seeders\\": "database/seeders/"
-    }
+  "homepage": "https://github.com/iquesters/organisation",
+  "support": {
+    "issues": "https://github.com/iquesters/organisation/issues",
+    "source": "https://github.com/iquesters/organisation",
+    "security": "https://github.com/iquesters/organisation/security/policy",
+    "docs": "https://github.com/iquesters/organisation/tree/main/docs"
   },
   "authors": [
     {
@@ -19,7 +23,60 @@
       "email": "pritam02b@gmail.com"
     }
   ],
+  "require": {
+    "php": "^8.3",
+    "laravel/framework": "^12.0|^13.0",
+    "iquesters/foundation": "^2.0",
+    "iquesters/user-interface": "^2.0",
+    "spatie/laravel-permission": "^8.0"
+  },
+  "require-dev": {
+    "orchestra/testbench": "^10.0|^11.0",
+    "laravel/sanctum": "^4.0",
+    "laravel/pint": "^1.18",
+    "larastan/larastan": "^3.0"
+  },
+  "repositories": [
+    {
+      "type": "path",
+      "url": "../foundation",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "iquesters/foundation": "2.x-dev"
+        }
+      }
+    },
+    {
+      "type": "path",
+      "url": "../user-interface",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "iquesters/user-interface": "2.x-dev"
+        }
+      }
+    }
+  ],
+  "scripts": {
+    "test": "phpunit",
+    "format": "pint",
+    "lint": "pint --test",
+    "analyse": "phpstan analyse --memory-limit=1G"
+  },
+  "autoload": {
+    "psr-4": {
+      "Iquesters\\Organisation\\": "src/",
+      "Iquesters\\Organisation\\Database\\Seeders\\": "database/seeders/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Iquesters\\Organisation\\Tests\\": "tests/"
+    }
+  },
   "minimum-stability": "dev",
+  "prefer-stable": true,
   "extra": {
     "laravel": {
       "providers": [

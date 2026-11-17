@@ -7,23 +7,25 @@ use Iquesters\Foundation\Database\Seeders\BaseSeeder;
 class OrganisationSeeder extends BaseSeeder
 {
     protected string $moduleName = 'organisation';
+
     protected string $description = 'organisation module';
+
     protected array $metas = [
         'module_icon' => 'fas fa-building',
         'module_sidebar_menu' => [
             [
-                "icon" => "fas fa-building-columns",
-                "label" => "All Organisations",
-                "route" => "organisations.index",
-            ]
-        ]
+                'icon' => 'fas fa-building-columns',
+                'label' => 'All Organisations',
+                'route' => 'organisations.index',
+            ],
+        ],
     ];
 
     protected array $permissions = [
         'view-organisations',
         'create-organisations',
         'edit-organisations',
-        'delete-organisations'
+        'delete-organisations',
     ];
 
     protected array $entities = [
@@ -48,7 +50,7 @@ class OrganisationSeeder extends BaseSeeder
             'metas' => [],
         ],
     ];
-    
+
     /**
      * Implement abstract method from BaseSeeder
      */

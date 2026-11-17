@@ -1,35 +1,35 @@
 <?php
 
-
 namespace Iquesters\Organisation\Http\Controllers;
 
-use Illuminate\Routing\Controller;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Iquesters\Organisation\Models\Organisation;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Iquesters\Foundation\Http\Middleware\EnsureAdmin;
+use Iquesters\Foundation\System\Traits\Loggable;
+use Iquesters\Organisation\Models\Organisation;
 
 class OrganisationController extends Controller
 {
+    use Loggable;
 
     public function index()
     {
         try {
-            Log::info('Fetching organisations');
+            static::logInfo('Fetching organisations');
 
             $user = Auth::user();
 
             // ✅ Super Admin → see all organisations
             if ($user->hasRole('super-admin')) {
-                Log::info('User is super-admin, fetching all organisations');
+                static::logInfo('User is super-admin, fetching all organisations');
 
                 $organisations = Organisation::where('status', '<>', 'deleted')->get();
 
-                Log::debug('Organisations fetched successfully', [
-                    'count' => $organisations->count()
+                static::logDebug('Organisations fetched successfully', [
+                    'count' => $organisations->count(),
                 ]);
 
                 return view('organisation::organisations.index', compact('organisations'));
@@ -42,7 +42,7 @@ class OrganisationController extends Controller
 
             $count = $organisations->count();
 
-            Log::debug('User organisations fetched', ['count' => $count]);
+            static::logDebug('User organisations fetched', ['count' => $count]);
 
             // ✅ Only ONE organisation → redirect to show
             if ($count === 1) {
@@ -56,11 +56,11 @@ class OrganisationController extends Controller
             return view('organisation::organisations.index', compact('organisations'));
 
         } catch (\Exception $e) {
-            Log::error('Failed to fetch organisations', [
-                'error' => $e->getMessage()
+            static::logError('Failed to fetch organisations', [
+                'error' => $e->getMessage(),
             ]);
 
-            Log::debug($e->getTraceAsString());
+            static::logDebug($e->getTraceAsString());
 
             return redirect()
                 ->route('dashboard')
@@ -78,7 +78,7 @@ class OrganisationController extends Controller
     public function store(Request $request)
     {
         try {
-            Log::info('Attempting to create new organisation');
+            static::logInfo('Attempting to create new organisation');
 
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
@@ -87,7 +87,8 @@ class OrganisationController extends Controller
             ]);
 
             if ($validator->fails()) {
-                Log::warning('Organisation validation failed', ['errors' => $validator->errors()]);
+                static::logWarning('Organisation validation failed', ['errors' => $validator->errors()]);
+
                 return redirect()->back()->withErrors($validator)->withInput();
             }
 
@@ -96,16 +97,17 @@ class OrganisationController extends Controller
                 'name' => $request->name,
                 'description' => $request->description ?? '',
                 'status' => $request->status ?? 'unknown',
-                'created_by' => Auth::user()->id ?? 0,
-                'updated_by' => Auth::user()->id ?? 0,
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
             ]);
 
-            Log::info('Organisation created successfully', ['organisation_uid' => $organisation->uid]);
+            static::logInfo('Organisation created successfully', ['organisation_uid' => $organisation->uid]);
 
             return redirect()->route('organisations.show', $organisation->uid)
                 ->with('success', 'Organisation created successfully');
         } catch (\Exception $e) {
-            Log::error('Failed to create organisation', ['error' => $e->getMessage()]);
+            static::logError('Failed to create organisation', ['error' => $e->getMessage()]);
+
             return redirect()->back()->with('error', 'Failed to create organisation')->withInput();
         }
     }
@@ -114,18 +116,26 @@ class OrganisationController extends Controller
     public function show($organisationUid)
     {
         try {
-            Log::info('Fetching organisation', ['organisation_uid' => $organisationUid]);
+            static::logInfo('Fetching organisation', ['organisation_uid' => $organisationUid]);
 
             $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
 
-            Log::debug('Organisation fetched successfully', ['organisation' => $organisation->toArray()]);
+            // Non-admins may only view organisations they belong to.
+            $user = Auth::user();
+            $isAdmin = $user->hasAnyRole(EnsureAdmin::roles());
+            if (! $isAdmin && ! $user->organisations()->whereKey($organisation->id)->exists()) {
+                throw new \Exception('User is not a member of organisation uid: '.$organisationUid);
+            }
+
+            static::logDebug('Organisation fetched successfully', ['organisation' => $organisation->toArray()]);
 
             return view('organisation::organisations.show', compact('organisation'));
         } catch (\Exception $e) {
-            Log::error('Failed to fetch organisation', [
+            static::logError('Failed to fetch organisation', [
                 'organisation_uid' => $organisationUid,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return redirect()->route('organisations.index')->with('error', 'Organisation not found');
         }
     }
@@ -135,12 +145,14 @@ class OrganisationController extends Controller
     {
         try {
             $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
-            if (!isset($organisation)) {
-                throw new \Exception('Organisation not found uid: ' . $organisationUid);
+            if (! isset($organisation)) {
+                throw new \Exception('Organisation not found uid: '.$organisationUid);
             }
+
             return view('organisation::organisations.form', compact('organisation'));
         } catch (\Exception $e) {
-            Log::error('Failed to load edit form', ['organisation_uid' => $organisationUid, 'error' => $e->getMessage()]);
+            static::logError('Failed to load edit form', ['organisation_uid' => $organisationUid, 'error' => $e->getMessage()]);
+
             return redirect()->route('organisations.index')->with('error', $e->getMessage());
         }
     }
@@ -149,11 +161,11 @@ class OrganisationController extends Controller
     public function update(Request $request, $organisationUid)
     {
         try {
-            Log::info('Attempting to update organisation', ['organisation_uid' => $organisationUid]);
+            static::logInfo('Attempting to update organisation', ['organisation_uid' => $organisationUid]);
 
             $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
-            if (!isset($organisation)) {
-                throw new \Exception('Organisation not found uid: ' . $organisationUid);
+            if (! isset($organisation)) {
+                throw new \Exception('Organisation not found uid: '.$organisationUid);
             }
 
             $validator = Validator::make($request->all(), [
@@ -163,7 +175,8 @@ class OrganisationController extends Controller
             ]);
 
             if ($validator->fails()) {
-                Log::warning('Organisation update validation failed', ['errors' => $validator->errors()]);
+                static::logWarning('Organisation update validation failed', ['errors' => $validator->errors()]);
+
                 return redirect()->back()->withErrors($validator)->withInput();
             }
 
@@ -174,12 +187,13 @@ class OrganisationController extends Controller
                 'updated_by' => Auth::user()->id ?? $organisation->updated_by,
             ]);
 
-            Log::info('Organisation updated successfully', ['organisation_uid' => $organisationUid]);
+            static::logInfo('Organisation updated successfully', ['organisation_uid' => $organisationUid]);
 
             return redirect()->route('organisations.show', $organisation->uid)
                 ->with('success', 'Organisation updated successfully');
         } catch (\Exception $e) {
-            Log::error('Failed to update organisation', ['organisation_uid' => $organisationUid, 'error' => $e->getMessage()]);
+            static::logError('Failed to update organisation', ['organisation_uid' => $organisationUid, 'error' => $e->getMessage()]);
+
             return redirect()->back()->with('error', 'Failed to update organisation')->withInput();
         }
     }
@@ -188,21 +202,22 @@ class OrganisationController extends Controller
     public function destroy($organisationUid)
     {
         try {
-            Log::info('Attempting to delete organisation', ['organisation_uid' => $organisationUid]);
+            static::logInfo('Attempting to delete organisation', ['organisation_uid' => $organisationUid]);
 
             $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
-            if (!isset($organisation)) {
-                throw new \Exception('Organisation not found uid: ' . $organisationUid);
+            if (! isset($organisation)) {
+                throw new \Exception('Organisation not found uid: '.$organisationUid);
             }
 
             $organisation->delete();
 
-            Log::info('Organisation deleted successfully', ['organisation_uid' => $organisationUid]);
+            static::logInfo('Organisation deleted successfully', ['organisation_uid' => $organisationUid]);
 
             return redirect()->route('organisations.index')
                 ->with('success', 'Organisation deleted successfully');
         } catch (\Exception $e) {
-            Log::error('Failed to delete organisation', ['organisation_uid' => $organisationUid, 'error' => $e->getMessage()]);
+            static::logError('Failed to delete organisation', ['organisation_uid' => $organisationUid, 'error' => $e->getMessage()]);
+
             return redirect()->back()->with('error', 'Failed to delete organisation');
         }
     }

@@ -1,22 +1,23 @@
 <?php
 
-
 namespace Iquesters\Organisation\Http\Controllers;
 
-use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
-use App\Models\User;
+use Iquesters\Foundation\Support\UserModel;
+use Iquesters\Foundation\System\Traits\Loggable;
 use Iquesters\Organisation\Models\Organisation;
 use Iquesters\Organisation\Models\Team;
 
 class OrganisationTeamController extends Controller
 {
+    use Loggable;
+
     public function teamsIndex(string $organisationUid)
     {
         try {
-            Log::info('Fetching organisation teams', [
+            static::logInfo('Fetching organisation teams', [
                 'organisationUid' => $organisationUid,
             ]);
 
@@ -25,9 +26,9 @@ class OrganisationTeamController extends Controller
             // Fetch teams belonging to this organisation
             $teams = Team::whereHas('organisations', function ($query) use ($organisation) {
                 $query->where('organisations.id', $organisation->id);
-                })->get();
+            })->get();
 
-            Log::debug('Organisation teams fetched', [
+            static::logDebug('Organisation teams fetched', [
                 'organisation_id' => $organisation->id,
                 'count' => $teams->count(),
             ]);
@@ -38,7 +39,7 @@ class OrganisationTeamController extends Controller
             );
 
         } catch (\Exception $e) {
-            Log::error('Failed to fetch organisation teams', [
+            static::logError('Failed to fetch organisation teams', [
                 'organisationUid' => $organisationUid,
                 'error' => $e->getMessage(),
             ]);
@@ -52,8 +53,8 @@ class OrganisationTeamController extends Controller
     public function create(string $organisationUid)
     {
         try {
-            Log::info('Opening create team page', [
-                'organisationUid' => $organisationUid
+            static::logInfo('Opening create team page', [
+                'organisationUid' => $organisationUid,
             ]);
 
             $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
@@ -61,15 +62,15 @@ class OrganisationTeamController extends Controller
             return view('organisation::teams.form', compact('organisation'));
 
         } catch (\Exception $e) {
-            Log::error('Failed to open create team page', [
+            static::logError('Failed to open create team page', [
                 'organisationUid' => $organisationUid,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()->back()->with('error', 'Unable to open team creation page.');
         }
     }
-    
+
     public function store(Request $request, string $organisationUid)
     {
         try {
@@ -92,17 +93,17 @@ class OrganisationTeamController extends Controller
             // Attach team to organisation
             $organisation->assignTeam($team);
 
-            Log::info('Team created', [
+            static::logInfo('Team created', [
                 'team_uid' => $team->uid,
-                'organisation_uid' => $organisationUid
+                'organisation_uid' => $organisationUid,
             ]);
 
             return redirect()->route('organisations.teams.index', $organisation->uid)->with('success', 'Team created successfully.');
 
         } catch (\Exception $e) {
-            Log::error('Failed to create team', [
+            static::logError('Failed to create team', [
                 'organisationUid' => $organisationUid,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()->back()->withInput()->with('error', 'Failed to create team.');
@@ -112,7 +113,7 @@ class OrganisationTeamController extends Controller
     public function edit(string $organisationUid, string $teamUid)
     {
         try {
-            Log::info('Opening edit team page', [
+            static::logInfo('Opening edit team page', [
                 'organisation_uid' => $organisationUid,
                 'team_uid' => $teamUid,
                 'user_id' => auth()->id(),
@@ -123,7 +124,7 @@ class OrganisationTeamController extends Controller
 
             // Safety check: ensure team belongs to organisation
             if (! $organisation->hasTeam($team)) {
-                Log::warning('Team does not belong to organisation', [
+                static::logWarning('Team does not belong to organisation', [
                     'organisation_uid' => $organisationUid,
                     'team_uid' => $teamUid,
                 ]);
@@ -134,7 +135,7 @@ class OrganisationTeamController extends Controller
                 );
             }
 
-            Log::debug('Edit team data loaded', [
+            static::logDebug('Edit team data loaded', [
                 'team_id' => $team->id,
                 'organisation_id' => $organisation->id,
             ]);
@@ -145,7 +146,7 @@ class OrganisationTeamController extends Controller
             );
 
         } catch (\Exception $e) {
-            Log::error('Failed to open edit team page', [
+            static::logError('Failed to open edit team page', [
                 'organisation_uid' => $organisationUid,
                 'team_uid' => $teamUid,
                 'error' => $e->getMessage(),
@@ -156,11 +157,11 @@ class OrganisationTeamController extends Controller
                 ->with('error', 'Unable to open edit team page.');
         }
     }
-    
+
     public function update(Request $request, string $organisationUid, string $teamUid)
     {
         try {
-            Log::info('Updating team', [
+            static::logInfo('Updating team', [
                 'organisation_uid' => $organisationUid,
                 'team_uid' => $teamUid,
                 'user_id' => auth()->id(),
@@ -176,7 +177,7 @@ class OrganisationTeamController extends Controller
 
             // Safety check
             if (! $organisation->hasTeam($team)) {
-                Log::warning('Attempt to update team not linked to organisation', [
+                static::logWarning('Attempt to update team not linked to organisation', [
                     'organisation_uid' => $organisationUid,
                     'team_uid' => $teamUid,
                 ]);
@@ -193,18 +194,18 @@ class OrganisationTeamController extends Controller
                 'updated_by' => auth()->id(),
             ]);
 
-            Log::info('Team updated successfully', [
+            static::logInfo('Team updated successfully', [
                 'team_uid' => $team->uid,
                 'organisation_uid' => $organisationUid,
             ]);
 
             return redirect()
                 ->route('organisations.teams.show', ['organisationUid' => $organisationUid,
-                'teamUid' => $teamUid,])
+                    'teamUid' => $teamUid, ])
                 ->with('success', 'Team updated successfully.');
 
         } catch (\Exception $e) {
-            Log::error('Failed to update team', [
+            static::logError('Failed to update team', [
                 'organisation_uid' => $organisationUid,
                 'team_uid' => $teamUid,
                 'error' => $e->getMessage(),
@@ -234,161 +235,160 @@ class OrganisationTeamController extends Controller
                 'updated_by' => auth()->id(),
             ]);
 
-            Log::info('Team deleted (soft)', [
+            static::logInfo('Team deleted (soft)', [
                 'team_uid' => $teamUid,
-                'organisation_uid' => $organisationUid
+                'organisation_uid' => $organisationUid,
             ]);
 
             return redirect()->back()->with('success', 'Team deleted successfully.');
         } catch (\Exception $e) {
-            Log::error('Failed to delete team', [
+            static::logError('Failed to delete team', [
                 'organisationUid' => $organisationUid,
                 'teamUid' => $teamUid,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()->back()->with('error', 'Failed to delete team.');
         }
     }
-    
+
     public function show(string $organisationUid, string $teamUid)
     {
         try {
-            Log::info('Fetching team', ['organisation_uid' => $organisationUid, 'team_uid' => $teamUid]);
+            static::logInfo('Fetching team', ['organisation_uid' => $organisationUid, 'team_uid' => $teamUid]);
 
             $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
 
             // Fetch the team within this organisation
             $team = $organisation->teams()->where('uid', $teamUid)->firstOrFail();
 
-            Log::debug('Team fetched successfully', ['team' => $team->toArray()]);
+            static::logDebug('Team fetched successfully', ['team' => $team->toArray()]);
 
             return view('organisation::teams.show', compact('organisation', 'team'));
         } catch (\Exception $e) {
-            Log::error('Failed to fetch team', [
+            static::logError('Failed to fetch team', [
                 'organisationUid' => $organisationUid,
                 'teamUid' => $teamUid,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()->back()->with('error', 'Team not found.');
         }
     }
-    
+
     public function teamUsersIndex(string $organisationUid, string $teamUid)
-{
-    try {
-        Log::info('Fetching team users', compact('organisationUid', 'teamUid'));
+    {
+        try {
+            static::logInfo('Fetching team users', compact('organisationUid', 'teamUid'));
 
-        $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
-        $team = Team::where('uid', $teamUid)->firstOrFail();
+            $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
+            $team = Team::where('uid', $teamUid)->firstOrFail();
 
-        if (! $organisation->hasTeam($team)) {
-            return back()->with('error', 'Team does not belong to this organisation.');
+            if (! $organisation->hasTeam($team)) {
+                return back()->with('error', 'Team does not belong to this organisation.');
+            }
+
+            // Users already in team
+            $users = UserModel::query()->whereHas('teams', function ($q) use ($team) {
+                $q->where('teams.id', $team->id);
+            })->get();
+
+            // Users in organisation but NOT in team
+            $availableUsers = UserModel::query()->whereHas('organisations', function ($q) use ($organisation) {
+                $q->where('organisations.id', $organisation->id);
+            })->whereDoesntHave('teams', function ($q) use ($team) {
+                $q->where('teams.id', $team->id);
+            })->get();
+
+            return view('organisation::teams.users.index', compact(
+                'organisation',
+                'team',
+                'users',
+                'availableUsers'
+            ));
+
+        } catch (\Exception $e) {
+            static::logError('Failed to fetch team users', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', $e->getMessage());
         }
-
-        // Users already in team
-        $users = User::whereHas('teams', function ($q) use ($team) {
-            $q->where('teams.id', $team->id);
-        })->get();
-
-        // Users in organisation but NOT in team
-        $availableUsers = User::whereHas('organisations', function ($q) use ($organisation) {
-            $q->where('organisations.id', $organisation->id);
-        })->whereDoesntHave('teams', function ($q) use ($team) {
-            $q->where('teams.id', $team->id);
-        })->get();
-
-        return view('organisation::teams.users.index', compact(
-            'organisation',
-            'team',
-            'users',
-            'availableUsers'
-        ));
-
-    } catch (\Exception $e) {
-        Log::error('Failed to fetch team users', [
-            'error' => $e->getMessage()
-        ]);
-
-        return back()->with('error', $e->getMessage());
     }
-}
 
-public function addUser(Request $request, string $organisationUid, string $teamUid)
-{
-    try {
-        $request->validate([
-            'user_id' => ['required', 'exists:users,uid'],
-        ]);
+    public function addUser(Request $request, string $organisationUid, string $teamUid)
+    {
+        try {
+            $request->validate([
+                'user_id' => ['required', 'exists:users,uid'],
+            ]);
 
-        $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
-        $team = Team::where('uid', $teamUid)->firstOrFail();
-        $user = User::where('uid', $request->user_id)->firstOrFail();
+            $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
+            $team = Team::where('uid', $teamUid)->firstOrFail();
+            $user = UserModel::query()->where('uid', $request->user_id)->firstOrFail();
 
-        // Ensure team belongs to organisation
-        if (! $organisation->hasTeam($team)) {
-            return back()->with('error', 'Invalid team.');
+            // Ensure team belongs to organisation
+            if (! $organisation->hasTeam($team)) {
+                return back()->with('error', 'Invalid team.');
+            }
+
+            // Ensure user belongs to organisation
+            if (! $user->hasOrganisation($organisation)) {
+                return back()->with('error', 'User must belong to organisation first.');
+            }
+
+            if ($user->hasTeam($team)) {
+                return back()->with('error', 'User already in this team.');
+            }
+
+            $user->assignTeam($team);
+
+            static::logInfo('User added to team', [
+                'team_uid' => $teamUid,
+                'user_uid' => $user->uid,
+            ]);
+
+            return back()->with('success', 'User added to team.');
+
+        } catch (\Exception $e) {
+            static::logError('Failed to add user to team', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Failed to add user to team.');
         }
-
-        // Ensure user belongs to organisation
-        if (! $user->hasOrganisation($organisation)) {
-            return back()->with('error', 'User must belong to organisation first.');
-        }
-
-        if ($user->hasTeam($team)) {
-            return back()->with('error', 'User already in this team.');
-        }
-
-        $user->assignTeam($team);
-
-        Log::info('User added to team', [
-            'team_uid' => $teamUid,
-            'user_uid' => $user->uid,
-        ]);
-
-        return back()->with('success', 'User added to team.');
-
-    } catch (\Exception $e) {
-        Log::error('Failed to add user to team', [
-            'error' => $e->getMessage()
-        ]);
-
-        return back()->with('error', 'Failed to add user to team.');
     }
-}
 
-public function removeUser(string $organisationUid, string $teamUid, string $userUid)
-{
-    try {
-        $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
-        $team = Team::where('uid', $teamUid)->firstOrFail();
-        $user = User::where('uid', $userUid)->firstOrFail();
+    public function removeUser(string $organisationUid, string $teamUid, string $userUid)
+    {
+        try {
+            $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
+            $team = Team::where('uid', $teamUid)->firstOrFail();
+            $user = UserModel::query()->where('uid', $userUid)->firstOrFail();
 
-        if (! $organisation->hasTeam($team)) {
-            return back()->with('error', 'Invalid team.');
+            if (! $organisation->hasTeam($team)) {
+                return back()->with('error', 'Invalid team.');
+            }
+
+            if (! $user->hasTeam($team)) {
+                return back()->with('error', 'User not in this team.');
+            }
+
+            $user->removeTeam($team);
+
+            static::logInfo('User removed from team', [
+                'team_uid' => $teamUid,
+                'user_uid' => $userUid,
+            ]);
+
+            return back()->with('success', 'User removed from team.');
+
+        } catch (\Exception $e) {
+            static::logError('Failed to remove user from team', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Failed to remove user from team.');
         }
-
-        if (! $user->hasTeam($team)) {
-            return back()->with('error', 'User not in this team.');
-        }
-
-        $user->removeTeam($team);
-
-        Log::info('User removed from team', [
-            'team_uid' => $teamUid,
-            'user_uid' => $userUid,
-        ]);
-
-        return back()->with('success', 'User removed from team.');
-
-    } catch (\Exception $e) {
-        Log::error('Failed to remove user from team', [
-            'error' => $e->getMessage()
-        ]);
-
-        return back()->with('error', 'Failed to remove user from team.');
     }
-}
-
 }
