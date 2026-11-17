@@ -1,14 +1,13 @@
 <?php
 
-
 namespace Iquesters\Organisation\Http\Controllers;
 
-use Iquesters\Foundation\System\Traits\Loggable;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Iquesters\Foundation\Support\UserModel;
-use Spatie\Permission\Models\Role;
+use Iquesters\Foundation\System\Traits\Loggable;
 use Iquesters\Organisation\Models\Organisation;
-use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 
 class OrganisationUserController extends Controller
 {
@@ -18,7 +17,7 @@ class OrganisationUserController extends Controller
     {
         try {
             static::logInfo('Fetching users for organisation', [
-                'organisationUid' => $organisationUid
+                'organisationUid' => $organisationUid,
             ]);
 
             // Fetch organisation
@@ -26,21 +25,21 @@ class OrganisationUserController extends Controller
 
             // Users already in this organisation
             $users = UserModel::query()->whereHas('organisations', function ($query) use ($organisation) {
-                    $query->where('organisations.id', $organisation->id);
-                })
+                $query->where('organisations.id', $organisation->id);
+            })
                 ->with('organisations')
                 ->get();
 
             // Users NOT in this organisation (available users)
             $availableUsers = UserModel::query()->whereDoesntHave('organisations', function ($query) use ($organisation) {
-                    $query->where('organisations.id', $organisation->id);
-                })
+                $query->where('organisations.id', $organisation->id);
+            })
                 ->get();
 
             static::logDebug('Organisation users fetched', [
                 'organisation_id' => $organisation->id,
                 'assigned' => $users->count(),
-                'available' => $availableUsers->count()
+                'available' => $availableUsers->count(),
             ]);
 
             return view(
@@ -51,7 +50,7 @@ class OrganisationUserController extends Controller
         } catch (\Exception $e) {
             static::logError('Failed to fetch organisation users', [
                 'organisationUid' => $organisationUid,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()
@@ -60,7 +59,6 @@ class OrganisationUserController extends Controller
         }
     }
 
-    
     public function addUser(Request $request, string $organisationUid)
     {
         try {
@@ -110,7 +108,7 @@ class OrganisationUserController extends Controller
                 ->with('error', 'Failed to add user to organisation.');
         }
     }
-    
+
     public function create(string $organisationUid)
     {
         try {
@@ -125,13 +123,13 @@ class OrganisationUserController extends Controller
         } catch (\Exception $e) {
             static::logError('Failed to load organisation user create page', [
                 'organisation_uid' => $organisationUid,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()->back()->with('error', 'Unable to load page.');
         }
     }
-    
+
     public function removeUser(string $organisationUid, string $userUid)
     {
         try {
@@ -142,7 +140,7 @@ class OrganisationUserController extends Controller
             $user = UserModel::query()->where('uid', $userUid)->firstOrFail();
 
             // Check if the user is actually assigned to this organisation
-            if (!$user->hasOrganisation($organisation)) {
+            if (! $user->hasOrganisation($organisation)) {
                 return redirect()
                     ->back()
                     ->with('error', 'User is not associated with this organisation.');
@@ -159,7 +157,7 @@ class OrganisationUserController extends Controller
             static::logError('Failed to remove user from organisation', [
                 'organisationUid' => $organisationUid,
                 'userUid' => $userUid,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()
@@ -167,5 +165,4 @@ class OrganisationUserController extends Controller
                 ->with('error', 'Failed to remove user from organisation.');
         }
     }
-
 }

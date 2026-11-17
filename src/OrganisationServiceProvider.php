@@ -17,7 +17,7 @@ class OrganisationServiceProvider extends BaseServiceProvider
         // composer install/update: add HasOrganisations to the app's user model (idempotent).
         $this->onPackageDiscover(function () {
             foreach (UserModelPatcher::ensure([HasOrganisations::class]) as $change) {
-                echo "👤 User model (organisation): {$change}" . PHP_EOL;
+                echo "👤 User model (organisation): {$change}".PHP_EOL;
             }
         });
     }

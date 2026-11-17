@@ -2,6 +2,7 @@
 
 namespace Iquesters\Organisation\Tests;
 
+use Diglactic\Breadcrumbs\Breadcrumbs;
 use Diglactic\Breadcrumbs\ServiceProvider as BreadcrumbsServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -35,7 +36,7 @@ abstract class TestCase extends Orchestra
 
     protected function getPackageAliases($app): array
     {
-        return ['Breadcrumbs' => \Diglactic\Breadcrumbs\Breadcrumbs::class];
+        return ['Breadcrumbs' => Breadcrumbs::class];
     }
 
     protected function defineEnvironment($app): void
@@ -46,14 +47,14 @@ abstract class TestCase extends Orchestra
 
     protected function defineDatabaseMigrations(): void
     {
-        $this->loadMigrationsFrom(__DIR__ . '/database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/database/migrations');
     }
 
     protected function makeUser(?string $role = null): User
     {
         $user = User::create([
-            'name' => 'Test ' . Str::random(6),
-            'email' => Str::random(10) . '@example.test',
+            'name' => 'Test '.Str::random(6),
+            'email' => Str::random(10).'@example.test',
             'password' => bcrypt(Str::random(20)),
         ]);
 

@@ -20,14 +20,14 @@ Route::middleware('web')->group(function () {
             Route::get('{organisationUid}/edit', [OrganisationController::class, 'edit'])->name('edit');
             Route::put('{organisationUid}', [OrganisationController::class, 'update'])->name('update');
             Route::delete('{organisationUid}', [OrganisationController::class, 'destroy'])->name('destroy');
-            
+
             Route::prefix('{organisationUid}/users')->name('users.')->group(function () {
                 Route::get('/', [OrganisationUserController::class, 'usersIndex'])->name('index');
                 Route::post('/', [OrganisationUserController::class, 'addUser'])->name('addUser');
                 Route::get('/create', [OrganisationUserController::class, 'create'])->name('create');
                 Route::delete('/{userUid}', [OrganisationUserController::class, 'removeUser'])->name('removeUser');
             });
-            
+
             Route::prefix('{organisationUid}/teams')->name('teams.')->group(function () {
                 Route::get('/', [OrganisationTeamController::class, 'teamsIndex'])->name('index');
                 Route::get('/create', [OrganisationTeamController::class, 'create'])->name('create');
@@ -35,7 +35,7 @@ Route::middleware('web')->group(function () {
                 Route::get('{teamUid}/edit', [OrganisationTeamController::class, 'edit'])->name('edit');
                 Route::put('{teamUid}', [OrganisationTeamController::class, 'update'])->name('update');
                 Route::delete('/{teamUid}', [OrganisationTeamController::class, 'destroy'])->name('destroy');
-                
+
                 Route::get('{teamUid}/show', [OrganisationTeamController::class, 'show'])->name('show');
                 Route::get('{teamUid}/users', [OrganisationTeamController::class, 'teamUsersIndex'])->name('users.index');
                 Route::post('{teamUid}/users', [OrganisationTeamController::class, 'addUser'])->name('users.addUser');

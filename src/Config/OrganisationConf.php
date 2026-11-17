@@ -2,8 +2,8 @@
 
 namespace Iquesters\Organisation\Config;
 
-use Iquesters\Foundation\Support\BaseConf;
 use Iquesters\Foundation\Enums\Module;
+use Iquesters\Foundation\Support\BaseConf;
 
 class OrganisationConf extends BaseConf
 {
