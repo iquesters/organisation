@@ -55,6 +55,16 @@ class OrganisationAccessTest extends TestCase
         $this->assertFalse($other->organisations()->exists());
     }
 
+    public function test_global_admin_cannot_create_or_read_unrelated_organisations(): void
+    {
+        $org = $this->makeOrganisation('Foreign');
+        $user = $this->makeUser('admin');
+        $this->actingAs($user)->postJson('/organisations', ['name' => 'Denied'])->assertForbidden();
+        $this->get('/organisations/'.$org->uid.'/show')->assertRedirect(route('organisations.index'));
+        $this->putJson('/organisations/'.$org->uid, ['name' => 'Denied'])->assertForbidden();
+        $this->assertDatabaseHas('organisations', ['id' => $org->id, 'name' => 'Foreign']);
+    }
+
     public function test_management_routes_carry_ensure_admin(): void
     {
         $open = ['organisations.index', 'organisations.show'];
