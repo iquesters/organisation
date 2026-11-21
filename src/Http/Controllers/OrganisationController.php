@@ -7,7 +7,6 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Iquesters\Foundation\Http\Middleware\EnsureAdmin;
 use Iquesters\Foundation\System\Traits\Loggable;
 use Iquesters\Organisation\Models\Organisation;
 
@@ -122,7 +121,7 @@ class OrganisationController extends Controller
 
             // Non-admins may only view organisations they belong to.
             $user = Auth::user();
-            $isAdmin = $user->hasAnyRole(EnsureAdmin::roles());
+            $isAdmin = $user->hasRole('super-admin', 'web');
             if (! $isAdmin && ! $user->organisations()->whereKey($organisation->id)->exists()) {
                 throw new \Exception('User is not a member of organisation uid: '.$organisationUid);
             }
