@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follo
 
 ## [Unreleased] – 2.0.0
 
+### Added
+- **Organisation access scope for the entity API** (`Support\OrganisationScopeResolver`, tagged `entity-scope-resolvers`). Foundation's entity API refuses any table with an `organisation_id` column until a resolver says which organisations the user may use ("No access-scope resolver is registered for the 'organisation_id' column"). Now: super-admin gets every organisation; others get the organisations they belong to; guests none.
+
 ### Housekeeping
 - Added Pint/Larastan, test CI, `.gitattributes`, `SECURITY.md`, `CONTRIBUTING.md`, `UPGRADE.md` and composer metadata.
 

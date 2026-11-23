@@ -4,11 +4,21 @@ namespace Iquesters\Organisation;
 
 use Iquesters\Foundation\Support\UserModelPatcher;
 use Iquesters\Foundation\System\Providers\BaseServiceProvider;
+use Iquesters\Organisation\Support\OrganisationScopeResolver;
 use Iquesters\Organisation\Traits\HasOrganisations;
 
 class OrganisationServiceProvider extends BaseServiceProvider
 {
     // Routes, views, migrations, seeder command and conf are auto-detected by BaseServiceProvider.
+
+    public function register(): void
+    {
+        parent::register();
+
+        // Foundation's entity API scopes organisation_id columns through tagged resolvers.
+        $this->app->singleton(OrganisationScopeResolver::class);
+        $this->app->tag([OrganisationScopeResolver::class], 'entity-scope-resolvers');
+    }
 
     public function boot(): void
     {
