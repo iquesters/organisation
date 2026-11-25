@@ -8,10 +8,12 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Iquesters\Foundation\System\Traits\Loggable;
 use Iquesters\Organisation\Models\Organisation;
 use Iquesters\Organisation\Support\OrganisationAccess;
+use Iquesters\Organisation\Support\OrganisationPolicies;
 use Iquesters\Organisation\Support\OrganisationProfile;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -31,10 +33,19 @@ class OrganisationProfileController extends Controller
         return view('organisation::profile.show', [
             'organisation' => $organisation->load('officeBearers'),
             'values' => $organisation->profileValues(),
-            'fields' => OrganisationProfile::fields(),
+            // The policies have their own pages (/o/{slug}/terms, /o/{slug}/privacy).
+            'fields' => collect(OrganisationProfile::fields())->reject(fn ($f) => ($f['page'] ?? true) === false)->values()->all(),
             'groups' => OrganisationProfile::groups(),
             'canEdit' => OrganisationAccess::canAdminister($request->user(), $organisation),
             'isPublic' => OrganisationProfile::isPublic($organisation),
+            // The public page's full address (copy link), and the Terms / Privacy links.
+            'publicUrl' => $organisation->slug ? route('organisations.public', $organisation->slug) : null,
+            'policies' => collect(OrganisationPolicies::KINDS)->map(fn ($meta, $kind) => [
+                'label' => $meta['label'],
+                'url' => ($url = OrganisationPolicies::url($organisation, $kind)) ? url($url) : null,
+                'own' => trim((string) $organisation->getMetaValue($kind.'_url')) !== '' || OrganisationPolicies::text($organisation, $kind) !== '',
+            ])->filter(fn ($p) => $p['url'])->values()->all(),
+            'policiesVersion' => OrganisationPolicies::version($organisation),
             // The member directory lives in the community module, when installed.
             'membersUrl' => Route::has('community.membership') ? route('community.membership', ['organisation' => $organisation->uid]) : null,
         ]);
@@ -53,6 +64,7 @@ class OrganisationProfileController extends Controller
                 'office_bearers' => $organisation->officeBearers()->get()->map->only(['id', 'title', 'name', 'email', 'phone', 'is_public'])->all(),
                 'public_page' => ($values[OrganisationProfile::PUBLIC_PAGE] ?? '0') === '1',
                 'remove_logo' => false,
+                'slug' => $organisation->slug,
             ],
             'hasLogo' => ! empty($values[OrganisationProfile::LOGO]),
         ]);
@@ -73,13 +85,18 @@ class OrganisationProfileController extends Controller
             'office_bearers.*.email' => ['nullable', 'email', 'max:255'],
             'office_bearers.*.phone' => ['nullable', 'string', 'max:32'],
             'office_bearers.*.is_public' => ['nullable', 'boolean'],
+            // The public page's address (/o/{slug}); unique.
+            'slug' => ['nullable', 'string', 'max:80', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('organisations', 'slug')->ignore($organisation->id)],
         ];
         $attributes = [];
         foreach (OrganisationProfile::fields() as $field) {
             $rules[$field['id']] = $field['rules'];
             $attributes[$field['id']] = $field['label'];
         }
-        $validated = $request->validate($rules, [], $attributes);
+        $validated = $request->validate($rules, ['slug.regex' => 'Use small letters, numbers and dashes, e.g. ttv-alumni.'], $attributes + ['slug' => 'public address']);
+        if (! empty($validated['slug']) && $validated['slug'] !== $organisation->slug) {
+            $organisation->forceFill(['slug' => $validated['slug']])->save();
+        }
 
         $userId = (int) $request->user()->id;
         OrganisationProfile::save(
@@ -129,6 +146,31 @@ class OrganisationProfileController extends Controller
             'fields' => collect(OrganisationProfile::fields())->where('public', true)->values()->all(),
             'groups' => OrganisationProfile::groups(),
             'officeBearers' => $organisation->officeBearers()->where('is_public', true)->get(),
+            // Applicants read them before joining.
+            'policyLinks' => OrganisationPolicies::links($organisation),
+        ]);
+    }
+
+    /** The organisation's own Terms / Privacy text (public: applicants read it before joining). */
+    public function policy(string $organisationUid, string $kind): View|\Illuminate\Http\RedirectResponse
+    {
+        abort_unless(array_key_exists($kind, OrganisationPolicies::KINDS), 404);
+        $organisation = $this->find($organisationUid);
+        $text = OrganisationPolicies::text($organisation, $kind);
+
+        if ($text === '') {
+            // A link, or the platform's page.
+            $url = OrganisationPolicies::url($organisation, $kind);
+            abort_unless($url, 404);
+
+            return redirect()->to($url);
+        }
+
+        return view('organisation::profile.policy', [
+            'organisation' => $organisation,
+            'title' => OrganisationPolicies::KINDS[$kind]['label'],
+            'text' => $text,
+            'version' => OrganisationPolicies::version($organisation),
         ]);
     }
 

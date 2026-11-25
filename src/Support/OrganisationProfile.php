@@ -47,12 +47,19 @@ class OrganisationProfile
             ['id' => 'linkedin', 'label' => 'LinkedIn', 'type' => 'url', 'group' => 'social', 'public' => true, 'rules' => ['nullable', 'url:https', 'max:255']],
             ['id' => 'x', 'label' => 'X (Twitter)', 'type' => 'url', 'group' => 'social', 'public' => true, 'rules' => ['nullable', 'url:https', 'max:255']],
             ['id' => 'youtube', 'label' => 'YouTube', 'type' => 'url', 'group' => 'social', 'public' => true, 'rules' => ['nullable', 'url:https', 'max:255']],
+            // The organisation's own Terms / Privacy policy (members agree to them when applying).
+            // A link, or the text here; neither: the platform's pages. Shown on their own pages, not on the profile.
+            ['id' => 'terms_url', 'label' => 'Terms and conditions: link', 'type' => 'url', 'group' => 'policies', 'public' => false, 'page' => false, 'rules' => ['nullable', 'url:http,https', 'max:2048']],
+            ['id' => 'terms_text', 'label' => 'Terms and conditions: text', 'type' => 'textarea', 'group' => 'policies', 'public' => false, 'page' => false, 'rules' => ['nullable', 'string', 'max:50000']],
+            ['id' => 'privacy_url', 'label' => 'Privacy policy: link', 'type' => 'url', 'group' => 'policies', 'public' => false, 'page' => false, 'rules' => ['nullable', 'url:http,https', 'max:2048']],
+            ['id' => 'privacy_text', 'label' => 'Privacy policy: text', 'type' => 'textarea', 'group' => 'policies', 'public' => false, 'page' => false, 'rules' => ['nullable', 'string', 'max:50000']],
+            ['id' => 'policies_version', 'label' => 'Version (e.g. the date they last changed)', 'type' => 'text', 'group' => 'policies', 'public' => false, 'page' => false, 'rules' => ['nullable', 'string', 'max:32']],
         ];
     }
 
     public static function groups(): array
     {
-        return ['about' => 'About', 'contact' => 'Contact', 'social' => 'Social links'];
+        return ['about' => 'About', 'contact' => 'Contact', 'social' => 'Social links', 'policies' => 'Terms and privacy'];
     }
 
     /** Form schema slug of the profile's edit form. */
@@ -69,6 +76,7 @@ class OrganisationProfile
             'about' => 'Who you are, in a few lines.',
             'contact' => 'How people reach you.',
             'social' => 'Full addresses, starting with https://.',
+            'policies' => 'What members agree to when they apply. Give a link or write the text; leave both empty to use the platform ones. Change the version when they change.',
         ];
         $fields = [];
         foreach (self::groups() as $group => $title) {
@@ -81,7 +89,7 @@ class OrganisationProfile
                     'id' => $field['id'],
                     'label' => $field['label'],
                     'type' => $field['type'],
-                    'rows' => $field['type'] === 'textarea' ? ($field['id'] === 'about' ? 5 : 3) : null,
+                    'rows' => $field['type'] === 'textarea' ? (in_array($field['id'], ['about', 'terms_text', 'privacy_text'], true) ? 6 : 3) : null,
                     'placeholder' => $field['type'] === 'url' ? 'https://' : null,
                 ], fn ($v) => $v !== null);
             }
@@ -113,6 +121,8 @@ class OrganisationProfile
                 ['id' => 'logo', 'label' => 'Logo', 'type' => 'file', 'accept' => '.jpg,.jpeg,.png,.webp', 'helperText' => 'JPG, PNG or WEBP, up to 2 MB.'],
                 ['id' => 'remove_logo', 'label' => 'Remove the current logo', 'type' => 'checkbox'],
                 ['id' => 'public_page', 'label' => 'Public page (anyone can see the profile)', 'type' => 'checkbox'],
+                ['id' => 'slug', 'label' => 'Public address', 'type' => 'text', 'maxLength' => 80, 'placeholder' => 'e.g. ttv-alumni',
+                    'helperText' => 'The page is at /o/your-address. Small letters, numbers and dashes. Empty: made from the name.'],
             ],
         ];
     }

@@ -28,6 +28,12 @@ class Organisation extends Model
         'uid' => 'string',
     ];
 
+    /** People of the organisation with their role there (member / org-admin). */
+    public function userRoles(): HasMany
+    {
+        return $this->hasMany(OrganisationUserRole::class);
+    }
+
     public function metas(): HasMany
     {
         return $this->hasMany(OrganisationMeta::class, 'ref_parent');

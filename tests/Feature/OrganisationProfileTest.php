@@ -20,7 +20,8 @@ class OrganisationProfileTest extends TestCase
     private function member(Organisation $organisation, string $role = 'user')
     {
         $user = $this->makeUser($role);
-        $user->organisations()->attach($organisation->id);
+        // An "admin" member is org-admin there (per-organisation role); anyone else a member.
+        \Iquesters\Organisation\Support\OrganisationRoles::join($user, $organisation, $role === 'admin' ? 'org-admin' : 'member');
 
         return $user;
     }

@@ -63,6 +63,13 @@
             </div>
         @endif
     </div>
+    @if (! empty($policyLinks))
+        <footer class="small text-muted text-center mt-3">
+            @foreach ($policyLinks as $link)
+                <a href="{{ $link['url'] }}" class="text-muted">{{ $link['label'] }}</a>@if (! $loop->last) · @endif
+            @endforeach
+        </footer>
+    @endif
 </main>
 </body>
 </html>

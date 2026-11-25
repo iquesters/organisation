@@ -9,11 +9,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', fn (Blueprint $t) => $t->string('status')->default('active'));
+        Schema::table('users', function (Blueprint $t) {
+            $t->string('status')->default('active');
+            $t->string('uid', 26)->nullable()->unique();
+        });
     }
 
     public function down(): void
     {
-        Schema::table('users', fn (Blueprint $t) => $t->dropColumn('status'));
+        Schema::table('users', fn (Blueprint $t) => $t->dropColumn(['status', 'uid']));
     }
 };

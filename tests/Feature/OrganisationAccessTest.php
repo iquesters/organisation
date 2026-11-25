@@ -2,19 +2,32 @@
 
 namespace Iquesters\Organisation\Tests\Feature;
 
+use Iquesters\Organisation\Support\OrganisationForms;
+use Iquesters\Organisation\Support\OrganisationTables;
 use Iquesters\Organisation\Tests\TestCase;
 
 class OrganisationAccessTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        OrganisationForms::syncAll();
+        OrganisationTables::syncAll();
+    }
+
     public function test_member_can_view_own_organisation(): void
     {
         $org = $this->makeOrganisation();
         $user = $this->makeUser('user');
         $user->organisations()->attach($org->id);
 
-        $response = $this->actingAs($user)->get("/organisations/{$org->uid}/show");
+        // The overview is the organisation's record in the Organisations table.
+        $location = $this->actingAs($user)->get("/organisations/{$org->uid}/show")->assertRedirect()->headers->get('Location');
+        $this->assertStringContainsString('/list/', $location);
+        $this->assertStringEndsWith("/data/{$org->uid}", $location);
 
-        $this->assertFalse($response->isRedirect(), 'Member was redirected away from their organisation.');
+        $this->getJson("/organisations/data/{$org->uid}")->assertOk()->assertJsonPath('response_schema.data.name', 'Acme');
+        $this->getJson('/organisations/data')->assertOk()->assertJsonCount(1, 'response_schema.data');
     }
 
     public function test_non_member_cannot_view_another_organisation(): void
@@ -31,9 +44,9 @@ class OrganisationAccessTest extends TestCase
     {
         $org = $this->makeOrganisation();
 
-        $response = $this->actingAs($this->makeUser('super-admin'))->get("/organisations/{$org->uid}/show");
+        $location = $this->actingAs($this->makeUser('super-admin'))->get("/organisations/{$org->uid}/show")->assertRedirect()->headers->get('Location');
 
-        $this->assertFalse($response->isRedirect(), 'Admin was redirected away from the organisation.');
+        $this->assertStringEndsWith("/data/{$org->uid}", $location);
     }
 
     public function test_non_admin_cannot_manage_organisations(): void
@@ -48,7 +61,8 @@ class OrganisationAccessTest extends TestCase
         $this->actingAs($user)->put("/organisations/{$org->uid}", ['name' => 'Renamed'])->assertForbidden();
         $this->actingAs($user)->delete("/organisations/{$org->uid}")->assertForbidden();
         $this->actingAs($user)->get("/organisations/{$org->uid}/users")->assertForbidden();
-        $this->actingAs($user)->post("/organisations/{$org->uid}/users", ['user_id' => 'x'])->assertForbidden();
+        $this->actingAs($user)->postJson('/organisation-people', ['organisation_id' => $org->id, 'role' => 'member', 'email' => 'x@example.test'])
+            ->assertStatus(422)->assertJsonValidationErrors('organisation_id');
         $this->actingAs($user)->get("/organisations/{$org->uid}/teams")->assertForbidden();
 
         $this->assertDatabaseHas('organisations', ['id' => $org->id, 'name' => 'Acme']);
@@ -65,16 +79,12 @@ class OrganisationAccessTest extends TestCase
         $this->assertDatabaseHas('organisations', ['id' => $org->id, 'name' => 'Foreign']);
     }
 
-    public function test_management_routes_carry_ensure_admin(): void
+    public function test_only_creating_and_changing_organisations_carry_ensure_admin(): void
     {
-        $open = ['organisations.index', 'organisations.show'];
-        // Not ensure.admin on purpose: each checks access itself (OrganisationAccess / the context),
-        // so members, organisation admins and the public page work.
-        $ownChecks = [
-            'organisations.public', 'organisations.logo',
-            'organisations.profile.show', 'organisations.profile.edit', 'organisations.profile.update',
-            'organisations.context.update', 'organisations.context.destroy', 'organisations.mine',
-        ];
+        // Super-admin only. Everything else checks access itself (OrganisationAccess:
+        // members view, org-admins manage their own organisations' people and teams).
+        // organisations.update: super-admins and the organisation's org-admins (checked in the controller).
+        $superAdminOnly = ['organisations.create', 'organisations.store', 'organisations.edit', 'organisations.destroy'];
 
         $routes = collect(app('router')->getRoutes()->getRoutes())
             ->filter(fn ($route) => str_starts_with((string) $route->getName(), 'organisations.'));
@@ -84,14 +94,10 @@ class OrganisationAccessTest extends TestCase
         foreach ($routes as $route) {
             $middleware = $route->gatherMiddleware();
 
-            if (in_array($route->getName(), $ownChecks, true)) {
-                continue;
-            }
-
-            if (in_array($route->getName(), $open, true)) {
-                $this->assertNotContains('ensure.admin', $middleware, "Route [{$route->getName()}] should be open to members.");
-            } else {
+            if (in_array($route->getName(), $superAdminOnly, true)) {
                 $this->assertContains('ensure.admin', $middleware, "Route [{$route->getName()}] is missing ensure.admin.");
+            } else {
+                $this->assertNotContains('ensure.admin', $middleware, "Route [{$route->getName()}] should check access itself.");
             }
         }
     }

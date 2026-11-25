@@ -7,7 +7,7 @@
     // The organisation's tabs (as on its other pages); Users and Teams for those who manage them.
     $tabs = array_values(array_filter([
         ['route' => 'organisations.show', 'params' => ['organisationUid' => $organisation->uid], 'icon' => 'far fa-fw fa-list-alt', 'label' => 'Overview'],
-        $canEdit ? ['route' => 'organisations.users.index', 'params' => ['organisationUid' => $organisation->uid], 'icon' => 'fas fa-fw fa-users', 'label' => 'Users'] : null,
+        $canEdit ? ['route' => 'organisations.users.index', 'params' => ['organisationUid' => $organisation->uid], 'icon' => 'fas fa-fw fa-users', 'label' => 'People and roles'] : null,
         $canEdit ? ['route' => 'organisations.teams.index', 'params' => ['organisationUid' => $organisation->uid], 'icon' => 'fas fa-fw fa-users-cog', 'label' => 'Teams'] : null,
         ['route' => 'organisations.profile.show', 'params' => ['organisationUid' => $organisation->uid], 'icon' => 'fas fa-fw fa-id-card', 'label' => 'Profile'],
     ]));
@@ -47,6 +47,42 @@
                 @if ($canEdit)
                     <a href="{{ route('organisations.profile.edit', $organisation->uid) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-fw fa-pen"></i> Edit profile</a>
                 @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- Links: the public page and the Terms / Privacy pages, each with Copy link. --}}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body small">
+            <div class="row g-3">
+                <div class="col-12 col-lg-6">
+                    <div class="fw-semibold mb-1"><i class="fas fa-fw fa-globe"></i> Public page</div>
+                    @if ($isPublic && $publicUrl)
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <code class="text-break">{{ $publicUrl }}</code>
+                            <a href="{{ $publicUrl }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary py-0">Open</a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary py-0" data-copy-link="{{ $publicUrl }}">Copy link</button>
+                        </div>
+                    @else
+                        <div class="text-muted">
+                            The public page is off.
+                            @if ($canEdit) Turn on "Public page" in <a href="{{ route('organisations.profile.edit', $organisation->uid) }}">Edit profile</a>. @endif
+                        </div>
+                    @endif
+                </div>
+                <div class="col-12 col-lg-6">
+                    <div class="fw-semibold mb-1">
+                        <i class="fas fa-fw fa-file-contract"></i> Terms and privacy
+                        @if ($policiesVersion !== 'platform')<span class="text-muted fw-normal">· version {{ $policiesVersion }}</span>@endif
+                    </div>
+                    @foreach ($policies as $policy)
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <a href="{{ $policy['url'] }}" target="_blank" rel="noopener">{{ $policy['label'] }}</a>
+                            @unless ($policy['own'])<span class="text-muted">(the platform's)</span>@endunless
+                            <button type="button" class="btn btn-sm btn-outline-secondary py-0" data-copy-link="{{ $policy['url'] }}">Copy link</button>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
     </div>
@@ -104,3 +140,24 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-copy-link]');
+    if (!button) {
+        return;
+    }
+    try {
+        await navigator.clipboard.writeText(button.dataset.copyLink);
+        if (typeof window.showSnackbar === 'function') {
+            window.showSnackbar('Link copied.', 'success');
+        } else {
+            button.textContent = 'Copied';
+        }
+    } catch (error) {
+        window.prompt('Copy the link:', button.dataset.copyLink);
+    }
+});
+</script>
+@endpush
