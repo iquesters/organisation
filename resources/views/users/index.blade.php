@@ -34,7 +34,15 @@
             'icon' => 'fas fa-fw fa-users-cog',
             'label' => 'Teams',
             // 'permission' => 'view-teams'
-        ]
+        ],
+        [
+            'route' => 'organisations.profile.show',
+            'params' => [
+                'organisationUid' => $organisation->uid,
+            ],
+            'icon' => 'fas fa-fw fa-id-card',
+            'label' => 'Profile',
+        ],
     ];
 @endphp
 

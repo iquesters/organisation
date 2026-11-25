@@ -17,6 +17,7 @@ class Organisation extends Model
     protected $fillable = [
         'uid',
         'name',
+        'slug',
         'description',
         'status',
         'created_by',
@@ -30,6 +31,17 @@ class Organisation extends Model
     public function metas(): HasMany
     {
         return $this->hasMany(OrganisationMeta::class, 'ref_parent');
+    }
+
+    public function officeBearers(): HasMany
+    {
+        return $this->hasMany(OrganisationOfficeBearer::class)->orderBy('sort')->orderBy('id');
+    }
+
+    /** Profile values (OrganisationProfile fields) keyed by field id. */
+    public function profileValues(): array
+    {
+        return $this->metas()->pluck('meta_value', 'meta_key')->all();
     }
 
     public function models(string $modelClass): MorphToMany

@@ -52,6 +52,7 @@
                     <tr>
                         {{-- <td>{{ $organisation->id }}</td> --}}
                         <td>
+                            {{-- The organisation: Overview, Users, Teams and Profile tabs. --}}
                             <a href="{{ route('organisations.show', $organisation->uid) }}" 
                                 class="text-decoration-none">
                                 {{ $organisation->name }}

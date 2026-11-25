@@ -35,6 +35,14 @@
             'label' => 'Teams',
             // 'permission' => 'view-teams'
         ],
+        [
+            'route' => 'organisations.profile.show',
+            'params' => [
+                'organisationUid' => $organisation->uid,
+            ],
+            'icon' => 'fas fa-fw fa-id-card',
+            'label' => 'Profile',
+        ],
     ];
 @endphp
 
@@ -50,6 +58,9 @@
             ])
         </div>
         <div class="d-flex align-items-center justify-content-center gap-2">
+            <a href="{{ route('organisations.profile.show', $organisation->uid) }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-fw fa-id-card"></i><span class="d-none d-md-inline-block ms-2">Profile</span>
+            </a>
             <a href="{{ route('organisations.edit', $organisation->uid) }}" class="btn btn-sm btn-outline-dark">
                 <i class="fas fa-fw fa-edit"></i><span class="d-none d-md-inline-block ms-2">Edit</span>
             </a>

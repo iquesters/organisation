@@ -3,6 +3,7 @@
 namespace Iquesters\Organisation\Database\Seeders;
 
 use Iquesters\Foundation\Database\Seeders\BaseSeeder;
+use Iquesters\Organisation\Support\OrganisationProfile;
 
 class OrganisationSeeder extends BaseSeeder
 {
@@ -13,6 +14,13 @@ class OrganisationSeeder extends BaseSeeder
     protected array $metas = [
         'module_icon' => 'fas fa-building',
         'module_sidebar_menu' => [
+            [
+                'key' => 'mine',
+                'icon' => 'fas fa-id-card',
+                'label' => 'My organisation',
+                // The profile of the organisation the user works in (header switcher).
+                'route' => 'organisations.mine',
+            ],
             [
                 'icon' => 'fas fa-building-columns',
                 'label' => 'All Organisations',
@@ -56,7 +64,7 @@ class OrganisationSeeder extends BaseSeeder
      */
     protected function seedCustom(): void
     {
-        // Add custom seeding logic here if needed
-        // Leave empty if none
+        // The profile's edit form (form schema), rebuilt on every seed.
+        OrganisationProfile::syncForm();
     }
 }

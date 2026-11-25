@@ -68,6 +68,13 @@ class OrganisationAccessTest extends TestCase
     public function test_management_routes_carry_ensure_admin(): void
     {
         $open = ['organisations.index', 'organisations.show'];
+        // Not ensure.admin on purpose: each checks access itself (OrganisationAccess / the context),
+        // so members, organisation admins and the public page work.
+        $ownChecks = [
+            'organisations.public', 'organisations.logo',
+            'organisations.profile.show', 'organisations.profile.edit', 'organisations.profile.update',
+            'organisations.context.update', 'organisations.context.destroy', 'organisations.mine',
+        ];
 
         $routes = collect(app('router')->getRoutes()->getRoutes())
             ->filter(fn ($route) => str_starts_with((string) $route->getName(), 'organisations.'));
@@ -76,6 +83,10 @@ class OrganisationAccessTest extends TestCase
 
         foreach ($routes as $route) {
             $middleware = $route->gatherMiddleware();
+
+            if (in_array($route->getName(), $ownChecks, true)) {
+                continue;
+            }
 
             if (in_array($route->getName(), $open, true)) {
                 $this->assertNotContains('ensure.admin', $middleware, "Route [{$route->getName()}] should be open to members.");
