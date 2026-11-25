@@ -5,6 +5,7 @@ namespace Iquesters\Organisation\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Iquesters\Organisation\Support\OrganisationAccess;
 use Iquesters\Organisation\Support\OrganisationContext;
 
 /** Switch the organisation the user is working in (the header's switcher). */
@@ -36,8 +37,13 @@ class OrganisationContextController extends Controller
     {
         $current = $this->context->current($request->user());
 
-        return $current
-            ? redirect()->route('organisations.profile.show', $current->uid)
-            : redirect()->route('organisations.index');
+        if ($current) {
+            return redirect()->route('organisations.profile.show', $current->uid);
+        }
+
+        // No organisation: super-admins get the list; others the dashboard, saying why.
+        return OrganisationAccess::isPlatformAdmin($request->user())
+            ? redirect()->route('organisations.index')
+            : redirect()->to(\Illuminate\Support\Facades\Route::has('dashboard') ? route('dashboard') : '/')->with('error', "You don't belong to an organisation yet.");
     }
 }

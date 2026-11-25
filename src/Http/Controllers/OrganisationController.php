@@ -29,8 +29,13 @@ class OrganisationController extends Controller
 
     public const TABLE = 'organisation-table';
 
-    public function index(): RedirectResponse
+    /** All Organisations: super-admins only; others open their own organisation (My organisation). */
+    public function index(Request $request): RedirectResponse
     {
+        if (! OrganisationAccess::isPlatformAdmin($request->user())) {
+            return redirect()->route('organisations.mine');
+        }
+
         return redirect()->to(self::tableUrl(self::TABLE));
     }
 
@@ -52,6 +57,11 @@ class OrganisationController extends Controller
             return redirect()->route('organisations.index')->with('error', 'Organisation not found');
         }
 
+        // The list is the super-admins'; everyone else sees the organisation's profile.
+        if (! OrganisationAccess::isPlatformAdmin($request->user())) {
+            return redirect()->route('organisations.profile.show', $organisation->uid);
+        }
+
         return redirect()->to(self::recordUrl(self::TABLE, OrganisationForms::DETAILS, $organisation->uid));
     }
 
@@ -60,9 +70,11 @@ class OrganisationController extends Controller
         return $this->show($request, $organisationUid);
     }
 
-    /** The table's rows (data_url). */
+    /** The table's rows (data_url): super-admins only. */
     public function data(Request $request): JsonResponse
     {
+        abort_unless(OrganisationAccess::isPlatformAdmin($request->user()), 403);
+
         $query = $this->visible($request)->withCount('userRoles as people_count');
 
         if ($search = trim((string) $request->query('search', ''))) {
@@ -86,6 +98,8 @@ class OrganisationController extends Controller
 
     public function record(Request $request, string $organisationUid): JsonResponse
     {
+        abort_unless(OrganisationAccess::isPlatformAdmin($request->user()), 403);
+
         return ApiResponse::success($this->row($this->find($request, $organisationUid), $request));
     }
 

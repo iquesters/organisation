@@ -19,7 +19,7 @@ class OrganisationTables
 {
     public static function syncAll(): void
     {
-        self::sync(OrganisationController::TABLE, 'Organisations', 'Organisations you belong to (all of them for super-admins)', self::organisations());
+        self::sync(OrganisationController::TABLE, 'All organisations', 'Every organisation on the platform (super-admins only)', self::organisations());
         self::sync(OrganisationPeopleController::TABLE, 'People and roles', 'People of the organisations you manage, and their role there', self::people());
         self::sync(OrganisationTeamController::TABLE, 'Teams', 'Teams of the organisations you manage', self::teams());
     }
@@ -30,9 +30,8 @@ class OrganisationTables
             'entity' => 'organisations',
             'data_url' => '/organisations/data',
             'create' => ['form' => OrganisationForms::DETAILS, 'label' => 'New organisation', 'permission' => 'create-organisations'],
-            // The organisation's tabs first, then its details (Edit for super-admins and its org-admins).
+            // Super-admins only: the organisation's details (name, status, description).
             'record' => [
-                ['html' => '/organisations/{uid}/links'],
                 ['form' => OrganisationForms::DETAILS, 'mode' => 'view', 'title' => 'Organisation'],
             ],
             'dt-options' => [

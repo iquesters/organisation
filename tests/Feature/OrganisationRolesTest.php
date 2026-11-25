@@ -160,8 +160,10 @@ class OrganisationRolesTest extends TestCase
         OrganisationRoles::join($admin, $mine, OrganisationUserRole::ROLE_ORG_ADMIN);
         $this->actingAs($admin);
 
-        // The record tells the form whether Edit is shown (bug #12).
-        $this->getJson("/organisations/data/{$mine->uid}")->assertOk()->assertJsonPath('response_schema.data._can.edit', true);
+        // The All Organisations list is the super-admins' (its record says who may edit, bug #12).
+        $this->getJson("/organisations/data/{$mine->uid}")->assertForbidden();
+        $this->actingAs($this->makeUser('super-admin'))->getJson("/organisations/data/{$mine->uid}")->assertOk()->assertJsonPath('response_schema.data._can.edit', true);
+        $this->actingAs($admin);
 
         $this->putJson("/organisations/{$mine->uid}", ['name' => 'Renamed', 'status' => 'inactive'])->assertOk();
         $this->assertSame(['Renamed', 'active'], [$mine->fresh()->name, $mine->fresh()->status]);

@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follo
 
 ## [Unreleased] – 2.0.0
 
+### Changed (test round 3)
+- **All Organisations is super-admin only** (menu item, list and its data). Org-admins and members open their own organisation with **My organisation**; an old link to an organisation shows its profile. The list's record shows only the details (no Profile / Public page links). Without an organisation, My organisation goes to the dashboard. Existing installs: `organisation:seed` takes `view-organisations` from the `admin` role.
+- **No organisation tabs:** the sidebar is the menu and the header's organisation switcher picks the organisation. The tab bar is gone from the profile page, and the Organisations record shows the details, then plain **Profile** and **Public page** links. The old tab addresses still redirect to the filtered tables.
+
 ### Fixed (test round 2)
 - **The organisation record has its tabs again:** Overview, People and roles, Teams, Profile (and Public page), above its details.
 - **Edit an organisation:** super-admins, and now its org-admins (name and description; the status stays super-admin only). The record says who may edit (`_can`).
