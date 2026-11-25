@@ -69,7 +69,9 @@ class OrganisationContextTest extends TestCase
         $user->organisations()->attach($organisation->id);
 
         $this->actingAs($user)->get('/organisations/mine')->assertRedirect("/organisations/{$organisation->uid}/profile");
-        $this->actingAs($this->makeUser('user'))->get('/organisations/mine')->assertRedirect('/organisations');
+        // No organisation: the dashboard (here '/', user-management isn't installed), not the super-admins' list.
+        $this->actingAs($this->makeUser('user'))->get('/organisations/mine')->assertRedirect('/')->assertSessionHas('error');
+        $this->actingAs($this->makeUser('super-admin'))->get('/organisations/mine')->assertRedirect('/organisations');
     }
 
     public function test_the_header_switcher(): void

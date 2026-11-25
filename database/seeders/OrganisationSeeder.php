@@ -129,7 +129,12 @@ class OrganisationSeeder extends BaseSeeder
 
         // Org-admins hold the global "admin" role (it only opens the menus; which
         // organisations they manage comes from organisation_user_roles).
-        Role::findOrCreate(OrganisationRoles::MENU_ROLE, 'web')->givePermissionTo([self::MANAGE_PEOPLE_PERMISSION, 'view-organisations']);
+        // Org-admins: People and roles, Teams. All Organisations (view-organisations) is super-admin only.
+        $menuRole = Role::findOrCreate(OrganisationRoles::MENU_ROLE, 'web');
+        $menuRole->givePermissionTo(self::MANAGE_PEOPLE_PERMISSION);
+        if ($menuRole->hasPermissionTo('view-organisations')) {
+            $menuRole->revokePermissionTo('view-organisations');
+        }
 
         // The module for everyone in an organisation; the items above decide what each sees.
         $roles = collect(self::MODULE_ROLES)->map(fn (string $name) => Role::findOrCreate($name, 'web'));
