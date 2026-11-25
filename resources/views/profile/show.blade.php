@@ -4,13 +4,8 @@
         : \Iquesters\Foundation\Support\ConfProvider::from(\Iquesters\Foundation\Enums\Module::ORGANISATION)->organisation_layout;
     $hasLogo = ! empty($values[\Iquesters\Organisation\Support\OrganisationProfile::LOGO]);
     $grouped = collect($fields)->groupBy('group');
-    // The organisation's tabs (as on its other pages); Users and Teams for those who manage them.
-    $tabs = array_values(array_filter([
-        ['route' => 'organisations.show', 'params' => ['organisationUid' => $organisation->uid], 'icon' => 'far fa-fw fa-list-alt', 'label' => 'Overview'],
-        $canEdit ? ['route' => 'organisations.users.index', 'params' => ['organisationUid' => $organisation->uid], 'icon' => 'fas fa-fw fa-users', 'label' => 'People and roles'] : null,
-        $canEdit ? ['route' => 'organisations.teams.index', 'params' => ['organisationUid' => $organisation->uid], 'icon' => 'fas fa-fw fa-users-cog', 'label' => 'Teams'] : null,
-        ['route' => 'organisations.profile.show', 'params' => ['organisationUid' => $organisation->uid], 'icon' => 'fas fa-fw fa-id-card', 'label' => 'Profile'],
-    ]));
+    // No organisation tabs: the sidebar is the menu, and the header's organisation
+    // switcher picks the organisation (bug #28).
 @endphp
 
 @extends($layout)

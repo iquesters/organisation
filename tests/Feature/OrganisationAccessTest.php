@@ -21,13 +21,11 @@ class OrganisationAccessTest extends TestCase
         $user = $this->makeUser('user');
         $user->organisations()->attach($org->id);
 
-        // The overview is the organisation's record in the Organisations table.
-        $location = $this->actingAs($user)->get("/organisations/{$org->uid}/show")->assertRedirect()->headers->get('Location');
-        $this->assertStringContainsString('/list/', $location);
-        $this->assertStringEndsWith("/data/{$org->uid}", $location);
-
-        $this->getJson("/organisations/data/{$org->uid}")->assertOk()->assertJsonPath('response_schema.data.name', 'Acme');
-        $this->getJson('/organisations/data')->assertOk()->assertJsonCount(1, 'response_schema.data');
+        // Members see their organisation's profile; the list is the super-admins'.
+        $this->actingAs($user)->get("/organisations/{$org->uid}/show")->assertRedirect(route('organisations.profile.show', $org->uid));
+        $this->get('/organisations')->assertRedirect(route('organisations.mine'));
+        $this->getJson('/organisations/data')->assertForbidden();
+        $this->getJson("/organisations/data/{$org->uid}")->assertForbidden();
     }
 
     public function test_non_member_cannot_view_another_organisation(): void
