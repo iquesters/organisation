@@ -2,222 +2,206 @@
 
 namespace Iquesters\Organisation\Http\Controllers;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
+use Iquesters\Foundation\System\Http\ApiResponse;
 use Iquesters\Foundation\System\Traits\Loggable;
 use Iquesters\Organisation\Models\Organisation;
+use Iquesters\Organisation\Models\OrganisationUserRole;
+use Iquesters\Organisation\Support\OrganisationAccess;
+use Iquesters\Organisation\Support\OrganisationForms;
+use Iquesters\Organisation\Support\OrganisationRoles;
 
+/**
+ * Organisations: the generic table (organisation-table, rows from data()) and
+ * the organisation-details form schema, which posts JSON here. Everyone sees
+ * the organisations they belong to; super-admins see and create all of them.
+ */
 class OrganisationController extends Controller
 {
     use Loggable;
 
-    public function index()
+    public const TABLE = 'organisation-table';
+
+    public function index(): RedirectResponse
     {
-        try {
-            static::logInfo('Fetching organisations');
-
-            $user = Auth::user();
-
-            // ✅ Super Admin → see all organisations
-            if ($user->hasRole('super-admin')) {
-                static::logInfo('User is super-admin, fetching all organisations');
-
-                $organisations = Organisation::where('status', '<>', 'deleted')->get();
-
-                static::logDebug('Organisations fetched successfully', [
-                    'count' => $organisations->count(),
-                ]);
-
-                return view('organisation::organisations.index', compact('organisations'));
-            }
-
-            // ✅ Non super-admin → only user's organisations
-            $organisations = $user->organisations()
-                ->where('status', '<>', 'deleted')
-                ->get();
-
-            $count = $organisations->count();
-
-            static::logDebug('User organisations fetched', ['count' => $count]);
-
-            // ✅ Only ONE organisation → redirect to show
-            if ($count === 1) {
-                return redirect()->route(
-                    'organisations.show',
-                    $organisations->first()->uid
-                );
-            }
-
-            // ✅ More than one → show index
-            return view('organisation::organisations.index', compact('organisations'));
-
-        } catch (\Exception $e) {
-            static::logError('Failed to fetch organisations', [
-                'error' => $e->getMessage(),
-            ]);
-
-            static::logDebug($e->getTraceAsString());
-
-            return redirect()
-                ->route('dashboard')
-                ->with('error', 'Failed to load organisations');
-        }
+        return redirect()->to(self::tableUrl(self::TABLE));
     }
 
-    // Show create form
-    public function create()
+    /** Old "New organisation" page: the table's create form. */
+    public function create(): RedirectResponse
     {
-        return view('organisation::organisations.form');
+        $form = DB::table('form_schemas')->where('slug', OrganisationForms::DETAILS)->value('uid');
+
+        return redirect()->to(self::tableUrl(self::TABLE).($form ? "/create/{$form}" : ''));
     }
 
-    // Store a new organisation
-    public function store(Request $request)
+    /** Old overview page: the organisation's record in the table. */
+    public function show(Request $request, string $organisationUid): RedirectResponse
     {
-        try {
-            static::logInfo('Attempting to create new organisation');
-
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'status' => 'nullable|string',
-            ]);
-
-            if ($validator->fails()) {
-                static::logWarning('Organisation validation failed', ['errors' => $validator->errors()]);
-
-                return redirect()->back()->withErrors($validator)->withInput();
-            }
-
-            $organisation = Organisation::create([
-                'uid' => Str::ulid(),
-                'name' => $request->name,
-                'description' => $request->description ?? '',
-                'status' => $request->status ?? 'unknown',
-                'created_by' => Auth::id(),
-                'updated_by' => Auth::id(),
-            ]);
-
-            static::logInfo('Organisation created successfully', ['organisation_uid' => $organisation->uid]);
-
-            return redirect()->route('organisations.show', $organisation->uid)
-                ->with('success', 'Organisation created successfully');
-        } catch (\Exception $e) {
-            static::logError('Failed to create organisation', ['error' => $e->getMessage()]);
-
-            return redirect()->back()->with('error', 'Failed to create organisation')->withInput();
-        }
-    }
-
-    // Show a specific organisation
-    public function show($organisationUid)
-    {
-        try {
-            static::logInfo('Fetching organisation', ['organisation_uid' => $organisationUid]);
-
-            $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
-
-            // Non-admins may only view organisations they belong to.
-            $user = Auth::user();
-            $isAdmin = $user->hasRole('super-admin', 'web');
-            if (! $isAdmin && ! $user->organisations()->whereKey($organisation->id)->exists()) {
-                throw new \Exception('User is not a member of organisation uid: '.$organisationUid);
-            }
-
-            static::logDebug('Organisation fetched successfully', ['organisation' => $organisation->toArray()]);
-
-            return view('organisation::organisations.show', compact('organisation'));
-        } catch (\Exception $e) {
-            static::logError('Failed to fetch organisation', [
-                'organisation_uid' => $organisationUid,
-                'error' => $e->getMessage(),
-            ]);
+        $organisation = Organisation::query()->where('uid', $organisationUid)->first();
+        if (! $organisation || ! OrganisationAccess::canView($request->user(), $organisation)) {
+            static::logWarning('Organisation not visible to user', ['organisation_uid' => $organisationUid, 'user_id' => $request->user()?->id]);
 
             return redirect()->route('organisations.index')->with('error', 'Organisation not found');
         }
+
+        return redirect()->to(self::recordUrl(self::TABLE, OrganisationForms::DETAILS, $organisation->uid));
     }
 
-    // Show edit form
-    public function edit($organisationUid)
+    public function edit(Request $request, string $organisationUid): RedirectResponse
     {
-        try {
-            $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
-            if (! isset($organisation)) {
-                throw new \Exception('Organisation not found uid: '.$organisationUid);
-            }
-
-            return view('organisation::organisations.form', compact('organisation'));
-        } catch (\Exception $e) {
-            static::logError('Failed to load edit form', ['organisation_uid' => $organisationUid, 'error' => $e->getMessage()]);
-
-            return redirect()->route('organisations.index')->with('error', $e->getMessage());
-        }
+        return $this->show($request, $organisationUid);
     }
 
-    // Update an organisation
-    public function update(Request $request, $organisationUid)
+    /** The table's rows (data_url). */
+    public function data(Request $request): JsonResponse
     {
-        try {
-            static::logInfo('Attempting to update organisation', ['organisation_uid' => $organisationUid]);
+        $query = $this->visible($request)->withCount('userRoles as people_count');
 
-            $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
-            if (! isset($organisation)) {
-                throw new \Exception('Organisation not found uid: '.$organisationUid);
-            }
-
-            $validator = Validator::make($request->all(), [
-                'name' => 'sometimes|string|max:255',
-                'description' => 'nullable|string',
-                'status' => 'nullable|string',
-            ]);
-
-            if ($validator->fails()) {
-                static::logWarning('Organisation update validation failed', ['errors' => $validator->errors()]);
-
-                return redirect()->back()->withErrors($validator)->withInput();
-            }
-
-            $organisation->update([
-                'name' => $request->name ?? $organisation->name,
-                'description' => $request->description ?? $organisation->description,
-                'status' => $request->status ?? $organisation->status,
-                'updated_by' => Auth::user()->id ?? $organisation->updated_by,
-            ]);
-
-            static::logInfo('Organisation updated successfully', ['organisation_uid' => $organisationUid]);
-
-            return redirect()->route('organisations.show', $organisation->uid)
-                ->with('success', 'Organisation updated successfully');
-        } catch (\Exception $e) {
-            static::logError('Failed to update organisation', ['organisation_uid' => $organisationUid, 'error' => $e->getMessage()]);
-
-            return redirect()->back()->with('error', 'Failed to update organisation')->withInput();
+        if ($search = trim((string) $request->query('search', ''))) {
+            $like = '%'.addcslashes($search, '%_\\').'%';
+            $query->where(fn (Builder $q) => $q->where('name', 'like', $like)->orWhere('description', 'like', $like));
         }
+
+        $offset = max(0, (int) $request->query('offset', 0));
+        $length = min(100, max(1, (int) $request->query('length', 25)));
+        $total = (clone $query)->count();
+        $sort = (string) $request->query('sort', '');
+        $column = ltrim($sort, '-');
+        in_array($column, ['name', 'status', 'created_at'], true)
+            ? $query->orderBy($column, str_starts_with($sort, '-') ? 'desc' : 'asc')
+            : $query->orderBy('name');
+
+        $rows = $query->skip($offset)->take($length)->get()->map(fn (Organisation $o) => $this->row($o, $request))->all();
+
+        return ApiResponse::success($rows, 'OK', 200, ['pagination' => ['total' => $total, 'offset' => $offset, 'length' => $length]]);
     }
 
-    // Delete an organisation
-    public function destroy($organisationUid)
+    public function record(Request $request, string $organisationUid): JsonResponse
     {
-        try {
-            static::logInfo('Attempting to delete organisation', ['organisation_uid' => $organisationUid]);
+        return ApiResponse::success($this->row($this->find($request, $organisationUid), $request));
+    }
 
-            $organisation = Organisation::where('uid', $organisationUid)->firstOrFail();
-            if (! isset($organisation)) {
-                throw new \Exception('Organisation not found uid: '.$organisationUid);
-            }
+    /** Record section: the organisation's other pages. */
+    public function links(Request $request, string $organisationUid): View
+    {
+        $organisation = $this->find($request, $organisationUid);
 
-            $organisation->delete();
+        return view('organisation::organisations.links', [
+            'organisation' => $organisation,
+            'canAdminister' => OrganisationAccess::canAdminister($request->user(), $organisation),
+            'peopleUrl' => self::tableUrl(OrganisationPeopleController::TABLE).'?organisation='.$organisation->uid,
+            'teamsUrl' => self::tableUrl(OrganisationTeamController::TABLE).'?organisation='.$organisation->uid,
+        ]);
+    }
 
-            static::logInfo('Organisation deleted successfully', ['organisation_uid' => $organisationUid]);
+    public function store(Request $request): JsonResponse
+    {
+        $organisation = Organisation::create($this->validated($request) + [
+            'uid' => (string) Str::ulid(),
+            'created_by' => $request->user()->id,
+            'updated_by' => $request->user()->id,
+        ]);
+        static::logInfo('Organisation created', ['organisation_uid' => $organisation->uid, 'user_id' => $request->user()->id]);
 
-            return redirect()->route('organisations.index')
-                ->with('success', 'Organisation deleted successfully');
-        } catch (\Exception $e) {
-            static::logError('Failed to delete organisation', ['organisation_uid' => $organisationUid, 'error' => $e->getMessage()]);
+        return response()->json(['success' => true, 'message' => 'Organisation created.', 'data' => $this->row($organisation, $request)], 201);
+    }
 
-            return redirect()->back()->with('error', 'Failed to delete organisation');
+    /** Super-admins, and the organisation's org-admins (name and description; the status stays super-admin only). */
+    public function update(Request $request, string $organisationUid): JsonResponse
+    {
+        $organisation = Organisation::query()->where('uid', $organisationUid)->firstOrFail();
+        abort_unless(OrganisationAccess::canAdminister($request->user(), $organisation), 403);
+
+        $data = $this->validated($request);
+        if (! OrganisationAccess::isPlatformAdmin($request->user())) {
+            $data['status'] = $organisation->status;
         }
+        $organisation->update($data + ['updated_by' => $request->user()->id]);
+        static::logInfo('Organisation updated', ['organisation_uid' => $organisation->uid, 'user_id' => $request->user()->id]);
+
+        return response()->json(['success' => true, 'message' => 'Organisation saved.', 'data' => $this->row($organisation, $request)]);
+    }
+
+    /** Organisations aren't deleted (members, events and payments point at them): they are made inactive. */
+    public function destroy(Request $request, string $organisationUid): JsonResponse
+    {
+        $organisation = Organisation::query()->where('uid', $organisationUid)->firstOrFail();
+        $organisation->update(['status' => 'inactive', 'updated_by' => $request->user()->id]);
+        static::logInfo('Organisation made inactive', ['organisation_uid' => $organisation->uid, 'user_id' => $request->user()->id]);
+
+        return response()->json(['success' => true, 'message' => 'Organisation made inactive.']);
+    }
+
+    public static function tableUrl(string $slug): string
+    {
+        $uid = DB::table('table_schemas')->where('slug', $slug)->value('uid');
+        abort_unless($uid, 404, 'Run organisation:seed to create the organisation tables.');
+
+        return url("/list/{$uid}");
+    }
+
+    public static function recordUrl(string $table, string $form, string $recordUid): string
+    {
+        $formUid = DB::table('form_schemas')->where('slug', $form)->value('uid');
+
+        return self::tableUrl($table).($formUid ? "/view/form/{$formUid}/data/{$recordUid}" : '');
+    }
+
+    /** @return Builder<Organisation> organisations the user may see (all but deleted ones for super-admins) */
+    private function visible(Request $request): Builder
+    {
+        $user = $request->user();
+        $query = Organisation::query()->where('status', '<>', 'deleted');
+
+        if (OrganisationAccess::isPlatformAdmin($user)) {
+            return $query;
+        }
+
+        $ids = array_unique(array_merge(OrganisationAccess::memberOrganisationIds($user), OrganisationAccess::adminOrganisationIds($user)));
+
+        return $query->whereIn('id', $ids);
+    }
+
+    private function find(Request $request, string $organisationUid): Organisation
+    {
+        return $this->visible($request)->where('uid', $organisationUid)->firstOrFail();
+    }
+
+    private function validated(Request $request): array
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:2000'],
+            'status' => ['nullable', 'in:active,inactive'],
+        ]);
+
+        return ['name' => $data['name'], 'description' => $data['description'] ?? '', 'status' => $data['status'] ?? 'active'];
+    }
+
+    private function row(Organisation $organisation, Request $request): array
+    {
+        $role = OrganisationAccess::isPlatformAdmin($request->user())
+            ? 'Super-admin'
+            : (($r = OrganisationRoles::roleIn($request->user(), $organisation)) ? OrganisationUserRole::label($r) : '');
+
+        return [
+            'uid' => $organisation->uid,
+            'name' => $organisation->name,
+            'description' => $organisation->description,
+            'status' => $organisation->status,
+            'status_label' => ucfirst((string) $organisation->status),
+            'people' => $organisation->people_count ?? null,
+            'my_role' => $role,
+            // The form's Edit / Delete buttons (user-interface reads "_can").
+            '_can' => ['edit' => OrganisationAccess::canAdminister($request->user(), $organisation), 'delete' => false],
+        ];
     }
 }

@@ -4,7 +4,9 @@ namespace Iquesters\Organisation;
 
 use Iquesters\Foundation\Support\UserModelPatcher;
 use Iquesters\Foundation\System\Providers\BaseServiceProvider;
+use Iquesters\Organisation\Support\OrganisationContext;
 use Iquesters\Organisation\Support\OrganisationScopeResolver;
+use Iquesters\Organisation\Support\OrganisationSwitcher;
 use Iquesters\Organisation\Traits\HasOrganisations;
 
 class OrganisationServiceProvider extends BaseServiceProvider
@@ -18,6 +20,12 @@ class OrganisationServiceProvider extends BaseServiceProvider
         // Foundation's entity API scopes organisation_id columns through tagged resolvers.
         $this->app->singleton(OrganisationScopeResolver::class);
         $this->app->tag([OrganisationScopeResolver::class], 'entity-scope-resolvers');
+
+        // The organisation the user works in, and its switcher in the header
+        // (user-interface shows the services tagged "header-widgets").
+        $this->app->scoped(OrganisationContext::class);
+        $this->app->scoped(OrganisationSwitcher::class);
+        $this->app->tag([OrganisationSwitcher::class], 'header-widgets');
     }
 
     public function boot(): void

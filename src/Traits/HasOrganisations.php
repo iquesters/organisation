@@ -3,7 +3,9 @@
 namespace Iquesters\Organisation\Traits;
 
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Iquesters\Organisation\Models\Organisation;
+use Iquesters\Organisation\Support\OrganisationRoles;
 
 trait HasOrganisations
 {
@@ -26,7 +28,12 @@ trait HasOrganisations
             $organisation = Organisation::findOrFail($organisation);
         }
 
-        $this->organisations()->syncWithoutDetaching([$organisation->id]);
+        // A user also gets their role there (member, or the one they already have).
+        if ($this instanceof Authenticatable && OrganisationRoles::available()) {
+            OrganisationRoles::join($this, $organisation);
+        } else {
+            $this->organisations()->syncWithoutDetaching([$organisation->id]);
+        }
 
         return $this;
     }
@@ -41,7 +48,11 @@ trait HasOrganisations
             $organisation = Organisation::findOrFail($organisation);
         }
 
-        $this->organisations()->detach($organisation->id);
+        if ($this instanceof Authenticatable && OrganisationRoles::available()) {
+            OrganisationRoles::leave($this, $organisation);
+        } else {
+            $this->organisations()->detach($organisation->id);
+        }
 
         return $this;
     }
@@ -79,6 +90,17 @@ trait HasOrganisations
         }
 
         $this->organisations()->sync($organisationIds);
+
+        // Roles follow: a row (member) for each new organisation, none for those left.
+        if ($this instanceof Authenticatable && OrganisationRoles::available()) {
+            \Iquesters\Organisation\Models\OrganisationUserRole::query()
+                ->where('user_id', $this->getAuthIdentifier())
+                ->whereNotIn('organisation_id', $organisationIds)
+                ->delete();
+            foreach (Organisation::query()->whereIn('id', $organisationIds)->get() as $organisation) {
+                OrganisationRoles::join($this, $organisation);
+            }
+        }
 
         return $this;
     }

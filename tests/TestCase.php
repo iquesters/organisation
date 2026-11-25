@@ -53,6 +53,7 @@ abstract class TestCase extends Orchestra
     protected function makeUser(?string $role = null): User
     {
         $user = User::create([
+            'uid' => (string) Str::ulid(),
             'name' => 'Test '.Str::random(6),
             'status' => 'active',
             'email' => Str::random(10).'@example.test',
