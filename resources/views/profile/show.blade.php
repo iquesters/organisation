@@ -30,7 +30,7 @@
                 <h5 class="fs-5 mb-1">{{ $organisation->name }}</h5>
                 @if (! empty($values['tagline']))<div class="text-muted small">{{ $values['tagline'] }}</div>@endif
                 @if ($isPublic)
-                    <a href="{{ route('organisations.public', $organisation->slug) }}" class="small" target="_blank" rel="noopener">
+                    <a href="{{ route('organisations.public', $organisation->uid) }}" class="small" target="_blank" rel="noopener">
                         <i class="fas fa-fw fa-globe"></i> Public page
                     </a>
                 @endif

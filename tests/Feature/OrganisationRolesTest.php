@@ -194,22 +194,20 @@ class OrganisationRolesTest extends TestCase
             ->assertStatus(422)->assertJsonValidationErrors('email');
     }
 
-    public function test_the_profile_sets_the_public_address_and_shows_the_links(): void
+    public function test_the_profile_shows_the_public_link_by_uid_and_the_policy_links(): void
     {
         $organisation = $this->makeOrganisation('TTV Alumni');
         $this->actingAs($this->makeUser('super-admin'));
         \Iquesters\Organisation\Support\OrganisationProfile::syncForm();
 
-        $this->putJson("/organisations/{$organisation->uid}/profile", ['public_page' => '1', 'slug' => 'Bad Address'])
-            ->assertStatus(422)->assertJsonValidationErrors('slug');
-        $this->putJson("/organisations/{$organisation->uid}/profile", ['public_page' => '1', 'slug' => 'ttv-alumni', 'terms_text' => 'Be kind.'])
+        $this->putJson("/organisations/{$organisation->uid}/profile", ['public_page' => '1', 'terms_text' => 'Be kind.'])
             ->assertOk();
 
         $this->get("/organisations/{$organisation->uid}/profile")->assertOk()
-            ->assertSee(route('organisations.public', 'ttv-alumni'))
+            ->assertSee(route('organisations.public', $organisation->uid))
             ->assertSee('Copy link')
             ->assertSee(url("/organisations/{$organisation->uid}/terms"));
-        $this->get('/o/ttv-alumni')->assertOk()->assertSee('TTV Alumni: Terms and conditions');
+        $this->get("/o/{$organisation->uid}")->assertOk()->assertSee('TTV Alumni: Terms and conditions');
     }
 }
 

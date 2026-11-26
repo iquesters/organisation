@@ -103,13 +103,17 @@ class OrganisationProfileTest extends TestCase
         $this->actingAs($this->makeUser('super-admin'))->put("/organisations/{$organisation->uid}/profile", $this->profile());
         auth()->logout();
 
-        $this->get('/o/ttvians')->assertOk()
+        $this->get("/o/{$organisation->uid}")->assertOk()
             ->assertSee('Old students of TTV')
             ->assertSee('Ann Roy')
             ->assertDontSee('Bob Sen')            // not on the public page
             ->assertDontSee('ann@ttvians.test');  // office bearers' contact details stay private
 
+        // An old address by name redirects to the lasting one (the uid).
+        $this->get('/o/ttvians')->assertRedirect("/o/{$organisation->uid}")->assertStatus(301);
+
         $organisation->setMetaValue(OrganisationProfile::PUBLIC_PAGE, '0');
+        $this->get("/o/{$organisation->uid}")->assertNotFound();
         $this->get('/o/ttvians')->assertNotFound();
     }
 

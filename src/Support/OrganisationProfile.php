@@ -11,7 +11,7 @@ use Iquesters\Organisation\Models\Organisation;
 
 /**
  * An organisation's profile: details kept in organisation_metas, a logo on the
- * private disk, and a public page (/o/{slug}) the admins can switch on.
+ * private disk, and a public page (/o/{uid}) the admins can switch on.
  */
 class OrganisationProfile
 {
@@ -120,9 +120,7 @@ class OrganisationProfile
                 ['id' => 'section_page', 'type' => 'section', 'label' => 'Logo and public page', 'description' => 'The public page shows the details and the office bearers ticked above, never their contact details.'],
                 ['id' => 'logo', 'label' => 'Logo', 'type' => 'file', 'accept' => '.jpg,.jpeg,.png,.webp', 'helperText' => 'JPG, PNG or WEBP, up to 2 MB.'],
                 ['id' => 'remove_logo', 'label' => 'Remove the current logo', 'type' => 'checkbox'],
-                ['id' => 'public_page', 'label' => 'Public page (anyone can see the profile)', 'type' => 'checkbox'],
-                ['id' => 'slug', 'label' => 'Public address', 'type' => 'text', 'maxLength' => 80, 'placeholder' => 'e.g. ttv-alumni',
-                    'helperText' => 'The page is at /o/your-address. Small letters, numbers and dashes. Empty: made from the name.'],
+                ['id' => 'public_page', 'label' => 'Public page (anyone can see the profile)', 'type' => 'checkbox', 'helperText' => 'Its link is on the profile page, with Copy link.'],
             ],
         ];
     }
@@ -149,7 +147,6 @@ class OrganisationProfile
     public static function isPublic(Organisation $organisation): bool
     {
         return $organisation->status === 'active'
-            && $organisation->slug
             && $organisation->getMetaValue(self::PUBLIC_PAGE) === '1';
     }
 

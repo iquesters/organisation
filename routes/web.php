@@ -8,9 +8,10 @@ use Iquesters\Organisation\Http\Controllers\OrganisationProfileController;
 use Iquesters\Organisation\Http\Controllers\OrganisationTeamController;
 
 Route::middleware('web')->group(function () {
-    // Public page of an organisation (only when its admins switched it on).
-    Route::get('o/{slug}', [OrganisationProfileController::class, 'publicShow'])
-        ->where('slug', '[a-z0-9-]+')
+    // Public page of an organisation (only when its admins switched it on): /o/{uid}.
+    // An old address by name (/o/{slug}) redirects to it.
+    Route::get('o/{key}', [OrganisationProfileController::class, 'publicShow'])
+        ->where('key', '[A-Za-z0-9-]+')
         ->name('organisations.public');
     Route::get('organisations/{organisationUid}/logo', [OrganisationProfileController::class, 'logo'])
         ->name('organisations.logo');

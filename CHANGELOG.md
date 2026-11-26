@@ -3,7 +3,21 @@
 All notable changes to this package are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/).
 
-## [Unreleased] – 2.0.0
+## [Unreleased]
+
+### Fixed
+- **`OrganisationPolicies::url()`** reads the organisation's uid when it was loaded without it, instead of failing to build the link.
+ – 2.0.0
+
+### Added (where a visitor came from)
+- **`OrganisationContext::rememberVisit()` / `cameFrom()`**: the organisation whose public page (or public event) a visitor came through, kept in the session before they sign in. Other modules preselect it (community's membership page). The organisation's public page remembers it.
+
+### Changed (public page address)
+- **The public page is at `/o/{uid}`**, which never changes (a rename doesn't break shared links); an old address by name (`/o/{slug}`) redirects there (301). The *Public address* field left the profile form; the page needs only *Public page* switched on.
+
+### Changed (test round 3)
+- **All Organisations is super-admin only** (menu item, list and its data). Org-admins and members open their own organisation with **My organisation**; an old link to an organisation shows its profile. The list's record shows only the details (no Profile / Public page links). Without an organisation, My organisation goes to the dashboard. Existing installs: `organisation:seed` takes `view-organisations` from the `admin` role.
+- **No organisation tabs:** the sidebar is the menu and the header's organisation switcher picks the organisation. The tab bar is gone from the profile page, and the Organisations record shows the details, then plain **Profile** and **Public page** links. The old tab addresses still redirect to the filtered tables.
 
 ### Changed (test round 3)
 - **All Organisations is super-admin only** (menu item, list and its data). Org-admins and members open their own organisation with **My organisation**; an old link to an organisation shows its profile. The list's record shows only the details (no Profile / Public page links). Without an organisation, My organisation goes to the dashboard. Existing installs: `organisation:seed` takes `view-organisations` from the `admin` role.

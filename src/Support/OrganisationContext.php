@@ -21,6 +21,9 @@ class OrganisationContext
 {
     public const SESSION_KEY = 'organisation.context_uid';
 
+    /** The organisation whose public page (or public event) a visitor came through, before signing in. */
+    public const CAME_FROM_KEY = 'organisation.came_from_uid';
+
     /** Organisations the user may switch to: active ones they belong to or administer (all, for super-admin). */
     public function available(?Authenticatable $user = null): Collection
     {
@@ -72,6 +75,24 @@ class OrganisationContext
         session([self::SESSION_KEY => $organisationUid]);
 
         return true;
+    }
+
+    /** A visitor reached the organisation's public page or one of its public events: remember it (no sign-in needed). */
+    public function rememberVisit(Organisation $organisation): void
+    {
+        session([self::CAME_FROM_KEY => $organisation->uid]);
+    }
+
+    /**
+     * The organisation the person came through (see rememberVisit), if it's
+     * active. Other modules use it to preselect it (e.g. community's
+     * membership page after signing up from an event link).
+     */
+    public function cameFrom(): ?Organisation
+    {
+        $uid = session(self::CAME_FROM_KEY);
+
+        return $uid ? Organisation::query()->where('uid', $uid)->where('status', 'active')->first() : null;
     }
 
     public function clear(): void
