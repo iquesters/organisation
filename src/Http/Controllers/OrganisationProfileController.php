@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * An organisation's profile: members see it, its admins edit it, and the
- * public page (/o/{slug}) shows it to everyone when switched on.
+ * public page (/o/{uid}) shows it to everyone when switched on.
  */
 class OrganisationProfileController extends Controller
 {
@@ -33,13 +33,13 @@ class OrganisationProfileController extends Controller
         return view('organisation::profile.show', [
             'organisation' => $organisation->load('officeBearers'),
             'values' => $organisation->profileValues(),
-            // The policies have their own pages (/o/{slug}/terms, /o/{slug}/privacy).
+            // The policies have their own pages (/organisations/{uid}/terms, /privacy).
             'fields' => collect(OrganisationProfile::fields())->reject(fn ($f) => ($f['page'] ?? true) === false)->values()->all(),
             'groups' => OrganisationProfile::groups(),
             'canEdit' => OrganisationAccess::canAdminister($request->user(), $organisation),
             'isPublic' => OrganisationProfile::isPublic($organisation),
             // The public page's full address (copy link), and the Terms / Privacy links.
-            'publicUrl' => $organisation->slug ? route('organisations.public', $organisation->slug) : null,
+            'publicUrl' => route('organisations.public', $organisation->uid),
             'policies' => collect(OrganisationPolicies::KINDS)->map(fn ($meta, $kind) => [
                 'label' => $meta['label'],
                 'url' => ($url = OrganisationPolicies::url($organisation, $kind)) ? url($url) : null,
@@ -64,7 +64,6 @@ class OrganisationProfileController extends Controller
                 'office_bearers' => $organisation->officeBearers()->get()->map->only(['id', 'title', 'name', 'email', 'phone', 'is_public'])->all(),
                 'public_page' => ($values[OrganisationProfile::PUBLIC_PAGE] ?? '0') === '1',
                 'remove_logo' => false,
-                'slug' => $organisation->slug,
             ],
             'hasLogo' => ! empty($values[OrganisationProfile::LOGO]),
         ]);
@@ -85,18 +84,13 @@ class OrganisationProfileController extends Controller
             'office_bearers.*.email' => ['nullable', 'email', 'max:255'],
             'office_bearers.*.phone' => ['nullable', 'string', 'max:32'],
             'office_bearers.*.is_public' => ['nullable', 'boolean'],
-            // The public page's address (/o/{slug}); unique.
-            'slug' => ['nullable', 'string', 'max:80', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('organisations', 'slug')->ignore($organisation->id)],
         ];
         $attributes = [];
         foreach (OrganisationProfile::fields() as $field) {
             $rules[$field['id']] = $field['rules'];
             $attributes[$field['id']] = $field['label'];
         }
-        $validated = $request->validate($rules, ['slug.regex' => 'Use small letters, numbers and dashes, e.g. ttv-alumni.'], $attributes + ['slug' => 'public address']);
-        if (! empty($validated['slug']) && $validated['slug'] !== $organisation->slug) {
-            $organisation->forceFill(['slug' => $validated['slug']])->save();
-        }
+        $validated = $request->validate($rules, [], $attributes);
 
         $userId = (int) $request->user()->id;
         OrganisationProfile::save(
@@ -134,11 +128,20 @@ class OrganisationProfileController extends Controller
         return $disk->response($path, null, ['Cache-Control' => 'public, max-age=3600']);
     }
 
-    /** /o/{slug}: no sign-in. Contact details of office bearers are never shown here. */
-    public function publicShow(string $slug): View
+    /** /o/{uid}: no sign-in. Contact details of office bearers are never shown here. */
+    public function publicShow(string $key): View|\Illuminate\Http\RedirectResponse
     {
-        $organisation = Organisation::query()->where('slug', $slug)->firstOrFail();
+        $organisation = Organisation::query()->where('uid', $key)->first();
+        if (! $organisation) {
+            // An address shared before (by name): the same page at its lasting address.
+            $old = Organisation::query()->where('slug', $key)->firstOrFail();
+            abort_unless(OrganisationProfile::isPublic($old), 404);
+
+            return redirect()->route('organisations.public', $old->uid, 301);
+        }
         abort_unless(OrganisationProfile::isPublic($organisation), 404);
+        // Signing up from here: the membership page has this organisation chosen.
+        app(\Iquesters\Organisation\Support\OrganisationContext::class)->rememberVisit($organisation);
 
         return view('organisation::profile.public', [
             'organisation' => $organisation,

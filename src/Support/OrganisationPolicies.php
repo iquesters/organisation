@@ -38,7 +38,10 @@ class OrganisationPolicies
             return $own;
         }
         if (self::text($organisation, $kind) !== '') {
-            return route('organisations.policy', ['organisationUid' => $organisation->uid, 'kind' => $kind], absolute: false);
+            // Loaded without its uid (e.g. ->with('organisation:id,name')): read it.
+            $uid = $organisation->uid ?: Organisation::query()->whereKey($organisation->getKey())->value('uid');
+
+            return $uid ? route('organisations.policy', ['organisationUid' => $uid, 'kind' => $kind], absolute: false) : null;
         }
         $platform = self::KINDS[$kind]['platform_route'];
 
