@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follo
 
 ## [Unreleased]
 
+### Fixed
+- **The app's tab icon** on the organisation's public page and its Terms / Privacy pages (they had none).
+
 ## [2.2.0] – 2026-11-27
 
 _Everything up to 2.2.0: the earlier releases (1.x to 2.1.1) were tagged without their own heading._
