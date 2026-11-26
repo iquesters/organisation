@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follo
 
 ## [Unreleased]
 
+## [2.2.0] – 2026-11-27
+
+_Everything up to 2.2.0: the earlier releases (1.x to 2.1.1) were tagged without their own heading._
+
 ### Fixed
 - **`OrganisationPolicies::url()`** reads the organisation's uid when it was loaded without it, instead of failing to build the link.
  – 2.0.0
