@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follo
 
 ## [Unreleased]
 
+### Changed
+- **Founded (year)** can't be in the future.
+
 ### Fixed
 - **The app's tab icon** on the organisation's public page and its Terms / Privacy pages (they had none).
 

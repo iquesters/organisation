@@ -35,7 +35,7 @@ class OrganisationProfile
         return [
             ['id' => 'tagline', 'label' => 'Tagline', 'type' => 'text', 'group' => 'about', 'public' => true, 'rules' => ['nullable', 'string', 'max:150']],
             ['id' => 'about', 'label' => 'About', 'type' => 'textarea', 'group' => 'about', 'public' => true, 'rules' => ['nullable', 'string', 'max:5000']],
-            ['id' => 'founded_year', 'label' => 'Founded (year)', 'type' => 'number', 'group' => 'about', 'public' => true, 'rules' => ['nullable', 'integer', 'min:1800', 'max:2100']],
+            ['id' => 'founded_year', 'label' => 'Founded (year)', 'type' => 'number', 'group' => 'about', 'public' => true, 'rules' => ['nullable', 'integer', 'min:1800', 'max:'.date('Y')]],
             ['id' => 'affiliation', 'label' => 'Affiliation / board', 'type' => 'text', 'group' => 'about', 'public' => true, 'rules' => ['nullable', 'string', 'max:255']],
             ['id' => 'registration_number', 'label' => 'Registration number', 'type' => 'text', 'group' => 'about', 'public' => true, 'rules' => ['nullable', 'string', 'max:100']],
             ['id' => 'email', 'label' => 'Email', 'type' => 'email', 'group' => 'contact', 'public' => true, 'rules' => ['nullable', 'email', 'max:255']],
